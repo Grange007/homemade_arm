@@ -3,7 +3,7 @@ import logging
 import serial
 import struct
 
-logging.basicConfig(filename='app.log', level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='CyberGear.log', level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s')
 
 PARAMETERS = {
     "run_mode":      {"index": 0x7005, "format": "u8", "mod": "rw"},
@@ -24,26 +24,27 @@ PARAMETERS = {
 class ControlModeMsg():
 
     def __init__(self, can_id=1, T=0.0, pos=0.0, W=0.0, Kp=0.0, Kd=0.0):
-        self.can_id = can_id
-        self.T      = min(max(T, -12.0), 12.0)
-        self.pos    = min(max(pos, -4*math.pi), 4*math.pi)
-        self.W      = min(max(W, -30.0), 30.0)
-        self.Kp     = min(max(Kp, 0.0), 500.0)
-        self.Kd     = min(max(Kd, 0.0), 5.0)
+        self.can_id   = can_id
+        self.torque   = min(max(T, -12.0), 12.0)
+        self.position = min(max(pos, -4*math.pi), 4*math.pi)
+        self.velocity = min(max(W, -30.0), 30.0)
+        self.Kp       = min(max(Kp, 0.0), 500.0)
+        self.Kd       = min(max(Kd, 0.0), 5.0)
 
     def encode(self):
-        type   = 0x01
-        T      = int((self.T + 12.0)/24 * 0xffff)
-        can_id = self.can_id << 3 | 0x04
-        len    = 0x08
-        pos    = int((self.pos + 4*math.pi)/(8*math.pi) * 0xffff)
-        W      = int((self.W + 30.0)/60 * 0xffff)
-        Kp     = int(self.Kp / 500 * 0xffff)
-        Kd     = int(self.Kd / 5 * 0xffff)
+        type     = 0x01
+        torque   = int((self. torque + 12.0)/24 * 0xffff)
+        can_id   = self.can_id << 3 | 0x04
+        length   = 0x08
+        position = int((self.position + 4*math.pi)/(8*math.pi) * 0xffff)
+        velocity = int((self.velocity + 30.0)/60 * 0xffff)
+        Kp       = int(self.Kp / 500 * 0xffff)
+        Kd       = int(self.Kd / 5 * 0xffff)
 
-        data = [type << 3 | T >> 13, T >> 5 & 0xff, (T & 0x1f) << 3 | can_id >> 8, can_id & 0xff,
-                len, pos >> 8, pos & 0xff, W >> 8, W & 0xff, Kp >> 8, Kp & 0xff, Kd >> 8, Kd & 0xff]
-        msg = "41 54 " + ' '.join(f'{byte:02X}' for byte in data) + " 0d 0a"
+        data = [type << 3 | torque >> 13, torque >> 5 & 0xff, (torque & 0x1f) << 3 | can_id >> 8, can_id & 0xff,
+                length, position >> 8, position & 0xff, velocity >> 8, velocity & 0xff, Kp >> 8, Kp & 0xff, Kd >> 8, Kd & 0xff]
+        msg = "41 54 " + ' '.join(f'{byte:02x}' for byte in data) + " 0d 0a"
+        print("encode msg", msg)
         return msg
 
 
@@ -54,7 +55,7 @@ class FeedbackMsg():
 
     def decode(self):
         if len(self.msg) != 17:
-            logging.warning("Invalid message.")
+            logging.warning("Invalid message length.")
             return False
 
         if self.msg[0] != 0x41 or self.msg[1] != 0x54 or self.msg[15] != 0x0d or self.msg[16] != 0x0a:
@@ -79,11 +80,11 @@ class FeedbackMsg():
         error = (self.msg[2] & 0x01) << 5 | self.msg[3] >> 3
         self.error = error != 0
 
-        cur_can_id = (self.msg[3] & 0x07) << 5 | self.msg[4] >> 3
-        self.cur_can_id = cur_can_id
+        can_id = (self.msg[3] & 0x07) << 5 | self.msg[4] >> 3
+        self.can_id = can_id
 
-        target_can_id = (self.msg[4] & 0x07) << 5 | self.msg[5] >> 3
-        self.target_can_id = target_can_id
+        host_id = (self.msg[4] & 0x07) << 5 | self.msg[5] >> 3
+        self.host_id = host_id
 
         if self.msg[5] & 0x07 != 0x04:
             logging.warning("Invalid can id.")
@@ -93,14 +94,14 @@ class FeedbackMsg():
             logging.warning("Invalid data length.")
             return False
 
-        target_pos = self.msg[7] << 8 | self.msg[8]
-        self.target_pos = (target_pos / 0xffff * 8*math.pi) - 4*math.pi
+        position = self.msg[7] << 8 | self.msg[8]
+        self.position = (position / 0xffff * 8*math.pi) - 4*math.pi
 
-        target_W = self.msg[9] << 8 | self.msg[10]
-        self.target_W = (target_W / 0xffff * 60) - 30
+        velocity = self.msg[9] << 8 | self.msg[10]
+        self.velocity = (velocity / 0xffff * 60) - 30
 
-        T = self.msg[11] << 8 | self.msg[12]
-        self.T = (T / 0xffff * 24) - 12
+        torque = self.msg[11] << 8 | self.msg[12]
+        self.torque = (torque / 0xffff * 24) - 12
 
         temp = self.msg[13] << 8 | self.msg[14]
         self.temp = temp / 10.0
