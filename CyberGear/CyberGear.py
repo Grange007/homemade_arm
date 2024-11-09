@@ -1,7 +1,9 @@
 import math
 import logging
 import serial
+import struct
 
+logging.basicConfig(filename='app.log', level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s')
 
 PARAMETERS = {
     "run_mode":      {"index": 0x7005, "format": "u8", "mod": "rw"},
@@ -51,20 +53,19 @@ class FeedbackMsg():
         self.msg = msg
 
     def decode(self):
-        if self.msg[0] != 0x41 and self.msg[1] != 0x54 and self.msg[15] != 0x0d and self.msg[16] != 0x0a:
-            logging.info("Invalid message.")
-            return False
-        if self.msg[6] != 0x08:
-            logging.info("Invalid length.")
-            return False
-        if self.msg[2] >> 3 != 0x02:
-            logging.info("Invalid type.")
-            return False
-        if self.msg[5] & 0x07 != 0x04:
-            logging.info("Invalid id.")
+        if len(self.msg) != 17:
+            logging.warning("Invalid message.")
             return False
 
-        state = msg[2] >> 1 & 0x03
+        if self.msg[0] != 0x41 or self.msg[1] != 0x54 or self.msg[15] != 0x0d or self.msg[16] != 0x0a:
+            logging.warning("Invalid header and tail.")
+            return False
+
+        if self.msg[2] >> 3 != 0x02:
+            logging.warning("Invalid type.")
+            return False
+
+        state = self.msg[2] >> 1 & 0x03
         if state == 0:
             self.state = "Reset"
         elif state == 1:
@@ -72,29 +73,37 @@ class FeedbackMsg():
         elif state == 2:
             self.state = "Run"
         else:
-            logging.info("Invalid state.")
+            logging.warning("Invalid state.")
             return False
 
-        error = (msg[2] & 0x01) << 5 | msg[3] >> 3
+        error = (self.msg[2] & 0x01) << 5 | self.msg[3] >> 3
         self.error = error != 0
 
-        can_id = (msg[3] & 0x07) << 5 | msg[4] >> 3
-        if can_id != (msg[4] & 0x07) << 5 | msg[5] >> 3:
-            logging.info("Invalid can id.")
-            return False
-        self.can_id = can_id
+        cur_can_id = (self.msg[3] & 0x07) << 5 | self.msg[4] >> 3
+        self.cur_can_id = cur_can_id
 
-        target_pos = msg[8] << 8 | msg[7]
+        target_can_id = (self.msg[4] & 0x07) << 5 | self.msg[5] >> 3
+        self.target_can_id = target_can_id
+
+        if self.msg[5] & 0x07 != 0x04:
+            logging.warning("Invalid can id.")
+            return False
+
+        if self.msg[6] != 0x08:
+            logging.warning("Invalid data length.")
+            return False
+
+        target_pos = self.msg[7] << 8 | self.msg[8]
         self.target_pos = (target_pos / 0xffff * 8*math.pi) - 4*math.pi
 
-        target_W = msg[10] << 8 | msg[9]
+        target_W = self.msg[9] << 8 | self.msg[10]
         self.target_W = (target_W / 0xffff * 60) - 30
 
-        T = msg[12] << 8 | msg[11]
+        T = self.msg[11] << 8 | self.msg[12]
         self.T = (T / 0xffff * 24) - 12
 
-        temp = msg[14] << 8 | msg[13]
-        self.temp = temp / 0xffff * 125
+        temp = self.msg[13] << 8 | self.msg[14]
+        self.temp = temp / 10.0
 
         return True
 
@@ -136,33 +145,40 @@ class ParamReadMsg():
         return msg
 
     def decode(self):
-        if self.msg[0] != 0x41 and self.msg[1] != 0x54 and self.msg[15] != 0x0d and self.msg[16] != 0x0a:
-            logging.info("Invalid message.")
+        if len(self.msg) != 17:
+            logging.warning("Invalid message.")
             return False
-        if self.msg[6] != 0x80: 
-            logging.info("Invalid length.")
-            return False
-        if self.msg[2] >> 3 != 0x12:
-            logging.info("Invalid type.")
-            return False
-        if self.msg[5] & 0x07 != 0x04:
-            logging.info("Invalid id.")
+
+        if self.msg[0] != 0x41 or self.msg[1] != 0x54 or self.msg[15] != 0x0d or self.msg[16] != 0x0a:
+            logging.warning("Invalid header and tail.")
             return False
         
-        can_id = (msg[4] & 0x07) << 5 | msg[5] >> 3
+        if self.msg[2] >> 3 != 0x12:
+            logging.warning("Invalid type.")
+            return False
+        
+        can_id = (self.msg[4] & 0x07) << 5 | self.msg[5] >> 3
         self.can_id = can_id
 
-        param = msg[8] << 8 | msg[7]
+        if self.msg[5] & 0x07 != 0x04:
+            logging.warning("Invalid can id.")
+            return False
+        
+        if self.msg[6] != 0x80: 
+            logging.warning("Invalid data length.")
+            return False
+        
+        param = self.msg[8] << 8 | self.msg[7]
         if param not in PARAMETERS["index"]:
-            logging.info("Invalid param.")
+            logging.warning("Invalid param.")
             return False
         self.param = param
 
-        if msg[9] != 0x00 or msg[10] != 0x00:
-            logging.info("Invalid data.")
+        if self.msg[9] != 0x00 or self.msg[10] != 0x00:
+            logging.warning("Invalid data.")
             return False
         
-        value = msg[14] << 24 | msg[13] << 16 | msg[12] << 8 | msg[11]
+        value = self.msg[14] << 24 | self.msg[13] << 16 | self.msg[12] << 8 | self.msg[11]
         if self.param == 0x7005:
             if value == 0:
                 self.value = "control mode"
@@ -173,7 +189,7 @@ class ParamReadMsg():
             elif value == 3:
                 self.value = "current mode"
             else:
-                logging.info("Invalid value.")
+                logging.warning("Invalid value.")
                 return False
         elif self.param == 0x7019:
             self.value = struct.unpack('f', struct.pack('I', value))[0]
@@ -186,7 +202,7 @@ class ParamReadMsg():
 class ParamWriteMsg():
 
     def __init__(self, can_id=1, param=None, value=None):
-        self.can_id = id
+        self.can_id = can_id
         self.param  = param
         self.value  = value
 
@@ -198,29 +214,38 @@ class MotorCtrl():
 
     def __init__(self, port='/dev/ttyUSB0', baudrate=921600, timeout=1):
         self.serial = serial.Serial(port, baudrate, timeout=timeout)
-        self.serial.write(bytes.fromhex('41 54 2b 41 54 0d 0a'))
+
+        while True:
+            self.serial.write(bytes.fromhex('41 54 2b 41 54 0d 0a'))
+            ok_msg = self.serial.read(4)
+            if ok_msg == b'OK\r\n':
+                break
 
     def close(self):
         self.serial.close()
 
+    def clear(self):
+        self.serial.reset_input_buffer()
+        self.serial.reset_output_buffer()
+
     def controlMode(self, send_msg):
         try:
-            print(send_msg.encode())
             self.serial.write(bytes.fromhex(send_msg.encode()))
         except:
-            logging.info("Failed to send controlModeMsg.")
+            logging.error("Failed to send controlModeMsg.")
+            return None
 
         recv_msg = FeedbackMsg(self.serial.read(17))
-        print(recv_msg.msg)
         if recv_msg.decode():
             return recv_msg
 
-    def paramRead(self, send_msg):
-        try:
-            self.serial.write(bytes.fromhex(send_msg.encode()))
-        except:
-            logging.info("Failed to send paramReadMsg.")
+    # def paramRead(self, send_msg):
+    #     try:
+    #         self.serial.write(bytes.fromhex(send_msg.encode()))
+    #     except:
+    #         logging.warning("Failed to send paramReadMsg.")
+    #         return None
         
-        recv_msg = ParamReadMsg(self.serial.read(17))
-        if recv_msg.decode():
-            return recv_msg
+    #     recv_msg = ParamReadMsg(self.serial.read(18))
+    #     if recv_msg.decode():
+    #         return recv_msg
