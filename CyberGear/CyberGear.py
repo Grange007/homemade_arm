@@ -34,7 +34,7 @@ class ControlModeMsg():
         T      = int((self.T + 12.0)/24 * 0xffff)
         can_id = self.can_id << 3 | 0x04
         len    = 0x08
-        pos    = int((self.pos + 4*math.pi)/(8*math.pi)) * 0xffff)
+        pos    = int((self.pos + 4*math.pi)/(8*math.pi) * 0xffff)
         W      = int((self.W + 30.0)/60 * 0xffff)
         Kp     = int(self.Kp / 500 * 0xffff)
         Kd     = int(self.Kd / 5 * 0xffff)
@@ -71,7 +71,7 @@ class FeedbackMsg():
             self.state = "Cali"
         elif state == 2:
             self.state = "Run"
-        else
+        else:
             logging.info("Invalid state.")
             return False
 
@@ -149,7 +149,7 @@ class ParamReadMsg():
             logging.info("Invalid id.")
             return False
         
-        can_id = (msg[4] & 0x07) << 5 | msg[5] >> 3:
+        can_id = (msg[4] & 0x07) << 5 | msg[5] >> 3
         self.can_id = can_id
 
         param = msg[8] << 8 | msg[7]
@@ -158,12 +158,12 @@ class ParamReadMsg():
             return False
         self.param = param
 
-        if msg[9] != 0x00 or msg[10] != 0x00
+        if msg[9] != 0x00 or msg[10] != 0x00:
             logging.info("Invalid data.")
             return False
         
         value = msg[14] << 24 | msg[13] << 16 | msg[12] << 8 | msg[11]
-        elif self.param == 0x7005:
+        if self.param == 0x7005:
             if value == 0:
                 self.value = "control mode"
             elif value == 1:
@@ -196,26 +196,31 @@ class ParamWriteMsg():
 
 class MotorCtrl():
 
-    def __init__(self, serial):
-        self.serial = serial
+    def __init__(self, port='/dev/ttyUSB0', baudrate=921600, timeout=1):
+        self.serial = serial.Serial(port, baudrate, timeout=timeout)
         self.serial.write(bytes.fromhex('41 54 2b 41 54 0d 0a'))
+
+    def close(self):
+        self.serial.close()
 
     def controlMode(self, send_msg):
         try:
+            print(send_msg.encode())
             self.serial.write(bytes.fromhex(send_msg.encode()))
         except:
             logging.info("Failed to send controlModeMsg.")
 
         recv_msg = FeedbackMsg(self.serial.read(17))
-        if (recv_msg.decode())
+        print(recv_msg.msg)
+        if recv_msg.decode():
             return recv_msg
 
-    def paramRead(self, send_msg)
+    def paramRead(self, send_msg):
         try:
             self.serial.write(bytes.fromhex(send_msg.encode()))
         except:
             logging.info("Failed to send paramReadMsg.")
         
         recv_msg = ParamReadMsg(self.serial.read(17))
-        if (recv_msg.decode())
+        if recv_msg.decode():
             return recv_msg
