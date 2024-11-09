@@ -1,25 +1,29 @@
 import serial
 import time
+import CyberGear
 
-ser = serial.Serial('/dev/ttyACM0', 921600, timeout=1)
+ser = serial.Serial('/dev/ttyUSB0', 921600, timeout=1)
 
-# ser.write(bytes.fromhex('41 54 2b 41 54 0d 0a'))
+motor_ctrl = CyberGear.MotorCtrl(ser)
 
-# Rotate the motor forward for 1 second
-ser.write(bytes.fromhex('41 54 90 07 e8 0c 08 05 70 00 00 07 01 95 54 0d 0a'))
-time.sleep(1)
+control_mode_msg = CyberGear.ControlModeMsg()
+control_mode_msg.can_id = 1
+control_mode_msg.T      = 0.0
+control_mode_msg.pos    = 0.0
+control_mode_msg.W      = 0.0
+control_mode_msg.Kp     = 0.0
+control_mode_msg.Ki     = 0.0
+feedback_msg = motor_ctrl.controlMode(control_mode_msg)
+print(feedback_msg)
+time.sleep(2)
 
-# Stop the motor for 1 second
-ser.write(bytes.fromhex('41 54 90 07 e8 0c 08 05 70 00 00 07 00 7f ff 0d 0a'))
-time.sleep(1)
-
-# Rotate the motor backward for 1 second
-ser.write(bytes.fromhex('41 54 90 07 e8 0c 08 05 70 00 00 07 01 6a aa 0d 0a'))
-time.sleep(1)
-
-# Stop the motor for 1 second
-ser.write(bytes.fromhex('41 54 90 07 e8 0c 08 05 70 00 00 07 00 7f ff 0d 0a'))
-time.sleep(1)
+while True:
+    param_read_msg = CyberGear.ParamReadMsg()
+    param_read_msg.can_id = 1
+    param_read_msg.param  = "mechPos"
+    param_read_msg_r = motor_ctrl.paramRead(param_read_msg)
+    print(param_read_msg_r)
+    time.sleep(1)
 
 # Close the serial port
 ser.close()
