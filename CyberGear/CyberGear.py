@@ -3,7 +3,7 @@ import logging
 import serial
 import struct
 
-logging.basicConfig(filename='CyberGear.log', level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='CyberGear.log', filemode='w', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 PARAMETERS = {
     "run_mode":      {"index": 0x7005, "format": "u8", "mod": "rw"},
@@ -23,11 +23,11 @@ PARAMETERS = {
 
 class ControlModeMsg():
 
-    def __init__(self, can_id=1, T=0.0, pos=0.0, W=0.0, Kp=0.0, Kd=0.0):
+    def __init__(self, can_id=1, torque=0.0, position=0.0, velocity=0.0, Kp=0.0, Kd=0.0):
         self.can_id   = can_id
-        self.torque   = min(max(T, -12.0), 12.0)
-        self.position = min(max(pos, -4*math.pi), 4*math.pi)
-        self.velocity = min(max(W, -30.0), 30.0)
+        self.torque   = min(max(torque, -12.0), 12.0)
+        self.position = min(max(position, -4*math.pi), 4*math.pi)
+        self.velocity = min(max(velocity, -30.0), 30.0)
         self.Kp       = min(max(Kp, 0.0), 500.0)
         self.Kd       = min(max(Kd, 0.0), 5.0)
 
@@ -41,10 +41,10 @@ class ControlModeMsg():
         Kp       = int(self.Kp / 500 * 0xffff)
         Kd       = int(self.Kd / 5 * 0xffff)
 
-        data = [type << 3 | torque >> 13, torque >> 5 & 0xff, (torque & 0x1f) << 3 | can_id >> 8, can_id & 0xff,
+        data = [type << 3 | torque >> 13, torque >> 5 & 0xff, torque << 3 & 0xff | can_id >> 8, can_id & 0xff,
                 length, position >> 8, position & 0xff, velocity >> 8, velocity & 0xff, Kp >> 8, Kp & 0xff, Kd >> 8, Kd & 0xff]
         msg = "41 54 " + ' '.join(f'{byte:02x}' for byte in data) + " 0d 0a"
-        print("encode msg", msg)
+        logging.info("controlModeMsg: " + msg)
         return msg
 
 
@@ -111,20 +111,42 @@ class FeedbackMsg():
 
 class EnableMsg():
 
-    def __init__(self, can_id=1):
-        self.can_id = can_id
+    def __init__(self, can_id=1, host_id=255):
+        self.can_id  = can_id
+        self.host_id = host_id
 
     def encode(self):
-        return None
+        type    = 0x03
+        can_id  = self.can_id << 3 | 0x04
+        host_id = self.host_id
+        length  = 0x08
+
+        data = [type << 3, host_id >> 5, host_id << 3 & 0xff | can_id >> 8, can_id & 0xff,
+                length, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+        msg = "41 54 " + ' '.join(f'{byte:02x}' for byte in data) + " 0d 0a"
+        logging.info("enableMsg: " + msg)
+        return msg
 
 
 class DisableMsg():
-    
-    def __init__(self, can_id=1):
-        self.can_id = can_id
+
+    def __init__(self, can_id=1, host_id=255, fault=False):
+        self.can_id  = can_id
+        self.host_id = host_id
+        self.fault   = fault
 
     def encode(self):
-        return None
+        type    = 0x04
+        can_id  = self.can_id << 3 | 0x04
+        host_id = self.host_id
+        length  = 0x08
+        fault   = 0x01 if self.fault else 0x00
+
+        data = [type << 3, host_id >> 5, host_id << 3 & 0xff | can_id >> 8, can_id & 0xff,
+                length, fault, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+        msg = "41 54 " + ' '.join(f'{byte:02x}' for byte in data) + " 0d 0a"
+        logging.info("disableMsg: " + msg)
+        return msg
 
 
 class ParamReadMsg():
@@ -208,6 +230,7 @@ class ParamWriteMsg():
         self.value  = value
 
     def encode(self):
+        # TODO
         return None
 
 
@@ -235,18 +258,26 @@ class MotorCtrl():
         except:
             logging.error("Failed to send controlModeMsg.")
             return None
-
         recv_msg = FeedbackMsg(self.serial.read(17))
         if recv_msg.decode():
             return recv_msg
 
-    # def paramRead(self, send_msg):
-    #     try:
-    #         self.serial.write(bytes.fromhex(send_msg.encode()))
-    #     except:
-    #         logging.warning("Failed to send paramReadMsg.")
-    #         return None
-        
-    #     recv_msg = ParamReadMsg(self.serial.read(18))
-    #     if recv_msg.decode():
-    #         return recv_msg
+    def enable(self, send_msg):
+        try:
+            self.serial.write(bytes.fromhex(send_msg.encode()))
+        except:
+            logging.error("Failed to send enableMsg.")
+            return None
+        recv_msg = FeedbackMsg(self.serial.read(17))
+        if recv_msg.decode():
+            return recv_msg
+
+    def disable(self, send_msg):
+        try:
+            self.serial.write(bytes.fromhex(send_msg.encode()))
+        except:
+            logging.error("Failed to send disableMsg.")
+            return None
+        recv_msg = FeedbackMsg(self.serial.read(17))
+        if recv_msg.decode():
+            return recv_msg
