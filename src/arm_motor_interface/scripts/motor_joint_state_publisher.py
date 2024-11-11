@@ -3,29 +3,78 @@ from sensor_msgs.msg import JointState
 from std_msgs.msg import Float64
 import numpy as np
 
+import sys
+import os
+cur_dir = os.path.dirname(os.path.abspath(__file__))
+CyberGear_dir = os.path.abspath(os.path.join(cur_dir, '..', '..', 'motor_tools', 'CyberGear'))
+GO_M8010_8_dir = os.path.abspath(os.path.join(cur_dir, '..', '..', 'motor_tools', 'GO_M8010_8'))
+if CyberGear_dir not in sys.path:
+    sys.path.append(CyberGear_dir)
+if GO_M8010_8_dir not in sys.path:
+    sys.path.append(GO_M8010_8_dir)
+import CyberGear
+# import GO_M8010_8
+
 class MotorJointStatePublisher:
     def __init__(self) -> None:
         self.joint_state_pub = rospy.Publisher('joint_states', JointState, queue_size=1)
         self.joint_angles = [0.0, 0.0, 0.0, 0.0, 0.0]
         self.joint_names = ['joint1', 'joint2', 'joint3', 'joint4', 'joint5']
         self.joint_state = JointState()
-        
-        self.test_counter = 0;
-        self.timer = rospy.Timer(rospy.Duration(0.01), self.timer_callback)
-    
-    def timer_callback(self, event):
-        self.test_counter += 0.01
-        if self.test_counter > 3.14:
-            self.test_counter = -3.14
-        self.joint_angles = [self.test_counter, self.test_counter, self.test_counter, self.test_counter, self.test_counter]
 
-        ######## Input the angle of motors (from -pi to pi) ##########
-        # self.joint_angles[0] = 
-        # self.joint_angles[1] = 
-        # self.joint_angles[2] = 
-        # self.joint_angles[3] = 
-        # self.joint_angles[4] = 
-         
+        self.test_counter = 0
+
+        self.CyberGear_init()
+        # self.GO_M8010_8_init()
+
+        self.timer = rospy.Timer(rospy.Duration(0.1), self.timer_callback)
+
+        
+
+    def CyberGear_init(self):
+        self.cybergear_motor_ctrl = CyberGear.MotorCtrl('/dev/ttyUSB0', 921600, timeout=1)
+        enable_msg = CyberGear.EnableMsg()
+        enable_msg.can_id  = 1
+        enable_msg.host_id = 253
+        self.cybergear_motor_ctrl.enable(enable_msg)
+        enable_msg.can_id  = 2
+        enable_msg.host_id = 253
+        self.cybergear_motor_ctrl.enable(enable_msg)
+
+    def timer_callback(self, event):
+        # self.test_counter += 0.01
+        # if self.test_counter > 3.14:
+        #     self.test_counter = -3.14
+        # self.joint_angles = [self.test_counter, self.test_counter, self.test_counter, self.test_counter, self.test_counter]
+
+        control_mode_msg = CyberGear.ControlModeMsg()
+
+        ######## Input the angle of motors (from -pi to pi) ########
+
+        self.joint_angles[0] = 0.0
+        self.joint_angles[1] = 0.0
+        self.joint_angles[2] = 0.0
+
+        control_mode_msg.can_id   = 1
+        control_mode_msg.torque   = 0.0
+        control_mode_msg.position = 0.0
+        control_mode_msg.velocity = 0.0
+        control_mode_msg.Kp       = 0.0
+        control_mode_msg.Ki       = 0.0
+        feedback_msg = self.cybergear_motor_ctrl.controlMode(control_mode_msg)
+        if feedback_msg is not None:
+            self.joint_angles[3] = (feedback_msg.position + 4*np.pi) % (2*np.pi) - np.pi
+
+        control_mode_msg.can_id   = 2
+        control_mode_msg.torque   = 0.0
+        control_mode_msg.position = 0.0
+        control_mode_msg.velocity = 0.0
+        control_mode_msg.Kp       = 0.0
+        control_mode_msg.Ki       = 0.0
+        feedback_msg = self.cybergear_motor_ctrl.controlMode(control_mode_msg)
+        if feedback_msg is not None:
+            self.joint_angles[4] = (feedback_msg.position + 4*np.pi) % (2*np.pi) - np.pi
+
         self.joint_state.header.stamp = rospy.Time.now()
         self.joint_state.name = self.joint_names
         self.joint_state.position = self.joint_angles
@@ -35,4 +84,3 @@ if __name__ == '__main__':
     rospy.init_node('motor_joint_state_publisher')
     motor_joint_state_publisher = MotorJointStatePublisher()
     rospy.spin()
-        
