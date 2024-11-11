@@ -1,5 +1,6 @@
-build
-__pycache__
+build/
+devel/
+__pycache__/
 
 *.log
 .vscode

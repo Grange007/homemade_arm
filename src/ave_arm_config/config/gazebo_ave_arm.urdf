@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot name="ave_arm">
+    <link name="dummy" />
+    <joint name="dummy_joint" type="fixed">
+        <parent link="dummy" />
+        <child link="base_link" />
+    </joint>
+    <link name="base_link">
+        <inertial>
+            <origin xyz="-0.00133700451705359 -0.0014776223883016 0.0171725333208996" rpy="0 0 0" />
+            <mass value="0.495398361421742" />
+            <inertia ixx="0.000977592796343529" ixy="5.75472061888291E-05" ixz="-1.81686046427324E-06" iyy="0.000986321958156476" iyz="-1.9921595121604E-06" izz="0.00193088540182339" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://ave_arm/meshes/base_link.STL" />
+            </geometry>
+            <material name="">
+                <color rgba="1 1 1 1" />
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://ave_arm/meshes/base_link.STL" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="link1">
+        <inertial>
+            <origin xyz="0.00132014818622215 0.00613370248515441 0.0505376779673008" rpy="0 0 0" />
+            <mass value="0.245433733010897" />
+            <inertia ixx="0.000262605483184927" ixy="-2.85267108486222E-06" ixz="-8.08644050972868E-06" iyy="0.000385789151658845" iyz="-3.04033425031524E-05" izz="0.000185347731633862" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://ave_arm/meshes/link1.STL" />
+            </geometry>
+            <material name="">
+                <color rgba="1 1 1 1" />
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://ave_arm/meshes/link1.STL" />
+            </geometry>
+        </collision>
+    </link>
+    <joint name="joint1" type="continuous">
+        <origin xyz="0.00090375 0.00093124 0.0615" rpy="0 0 -3.0139" />
+        <parent link="base_link" />
+        <child link="link1" />
+        <axis xyz="0 0 1" />
+    </joint>
+    <link name="link2">
+        <inertial>
+            <origin xyz="0.126827475764063 0.00538054748160802 0.0581422477433894" rpy="0 0 0" />
+            <mass value="0.469251691539086" />
+            <inertia ixx="0.000735122280564443" ixy="-0.000100192677052429" ixz="-0.000357149652393404" iyy="0.00184228470253638" iyz="-8.74879494582947E-05" izz="0.0012380826246888" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://ave_arm/meshes/link2.STL" />
+            </geometry>
+            <material name="">
+                <color rgba="1 1 1 1" />
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://ave_arm/meshes/link2.STL" />
+            </geometry>
+        </collision>
+    </link>
+    <joint name="joint2" type="continuous">
+        <origin xyz="0 -0.036045 0.06" rpy="-1.5708 -0.83842 0" />
+        <parent link="link1" />
+        <child link="link2" />
+        <axis xyz="0 0 -1" />
+    </joint>
+    <link name="link3">
+        <inertial>
+            <origin xyz="-0.0648779081985757 -0.0841990878752458 0.00524640375918309" rpy="0 0 0" />
+            <mass value="0.311778622098952" />
+            <inertia ixx="0.000367159128282544" ixy="-0.000151103106476051" ixz="2.76043573671825E-05" iyy="0.00028751609285446" iyz="3.58246773884041E-05" izz="0.000520368415855329" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://ave_arm/meshes/link3.STL" />
+            </geometry>
+            <material name="">
+                <color rgba="1 1 1 1" />
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://ave_arm/meshes/link3.STL" />
+            </geometry>
+        </collision>
+    </link>
+    <joint name="joint3" type="continuous">
+        <origin xyz="0.15411 -0.034 0.08" rpy="-1.5708 -0.085616 3.1416" />
+        <parent link="link2" />
+        <child link="link3" />
+        <axis xyz="0 0 1" />
+    </joint>
+    <link name="link4">
+        <inertial>
+            <origin xyz="-0.000184667003483879 0.000219303481400063 0.147525025287695" rpy="0 0 0" />
+            <mass value="0.473749922977081" />
+            <inertia ixx="0.00148782041076138" ixy="-8.49394546955604E-06" ixz="2.53966080391733E-05" iyy="0.00153601210270288" iyz="-8.04811278400785E-05" izz="0.000176531298886707" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://ave_arm/meshes/link4.STL" />
+            </geometry>
+            <material name="">
+                <color rgba="1 1 1 1" />
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://ave_arm/meshes/link4.STL" />
+            </geometry>
+        </collision>
+    </link>
+    <joint name="joint4" type="continuous">
+        <origin xyz="-0.10359 -0.13442 0.01" rpy="1.5708 -1.4162 -0.65657" />
+        <parent link="link3" />
+        <child link="link4" />
+        <axis xyz="0 0 1" />
+    </joint>
+    <link name="link5">
+        <inertial>
+            <origin xyz="0.000487847303525024 0.103069627445185 0.0047959021477267" rpy="0 0 0" />
+            <mass value="0.122729595601156" />
+            <inertia ixx="0.000119906990002352" ixy="1.40339492161808E-06" ixz="3.25048335977657E-08" iyy="5.98949635353449E-05" iyz="6.39169795372326E-07" izz="0.000173033038035876" />
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://ave_arm/meshes/link5.STL" />
+            </geometry>
+            <material name="">
+                <color rgba="1 1 1 1" />
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://ave_arm/meshes/link5.STL" />
+            </geometry>
+        </collision>
+    </link>
+    <joint name="joint5" type="continuous">
+        <origin xyz="0.0043571 -0.023601 0.23322" rpy="1.5708 0.66236 0.18256" />
+        <parent link="link4" />
+        <child link="link5" />
+        <axis xyz="0 0 -1" />
+    </joint>
+    <transmission name="trans_joint1">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="joint1">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="joint1_motor">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+    <transmission name="trans_joint2">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="joint2">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="joint2_motor">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+    <transmission name="trans_joint3">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="joint3">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="joint3_motor">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+    <transmission name="trans_joint4">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="joint4">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="joint4_motor">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+    <transmission name="trans_joint5">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="joint5">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="joint5_motor">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+    <gazebo>
+        <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+            <robotNamespace>/</robotNamespace>
+        </plugin>
+    </gazebo>
+</robot>
+
