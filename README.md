@@ -1,4 +1,4 @@
-﻿# Homemade Arm
+# Homemade Arm
 
 Prerequisites: Ubuntu 20.04, ROS noetic
 
