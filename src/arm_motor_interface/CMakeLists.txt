@@ -162,6 +162,7 @@ include_directories(
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
   scripts/motor_joint_state_publisher.py
+  scripts/motor_joint_state_publisher_test.py
   scripts/moveit_action_server.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
@@ -206,3 +207,7 @@ catkin_install_python(PROGRAMS
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+
+add_executable(partial_joint_state_publisher src/partial_joint_state_publisher.cpp)
+target_link_libraries(partial_joint_state_publisher ${catkin_LIBRARIES})
