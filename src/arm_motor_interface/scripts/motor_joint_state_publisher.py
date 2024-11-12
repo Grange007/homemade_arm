@@ -18,6 +18,7 @@ import CyberGear
 class MotorJointStatePublisher:
     def __init__(self) -> None:
         self.joint_state_pub = rospy.Publisher('joint_states', JointState, queue_size=1)
+        self.unitree_joint_state_sub = rospy.Subscriber('unitree_joint_states', JointState, self.unitree_joint_state_callback)
         self.joint_angles = [0.0, 0.0, 0.0, 0.0, 0.0]
         self.joint_names = ['joint1', 'joint2', 'joint3', 'joint4', 'joint5']
         self.joint_state = JointState()
@@ -29,7 +30,10 @@ class MotorJointStatePublisher:
 
         self.timer = rospy.Timer(rospy.Duration(0.1), self.timer_callback)
 
-        
+    def unitree_joint_state_callback(self, msg):
+        self.joint_angles[0] = msg.position[0]
+        self.joint_angles[1] = msg.position[1]
+        self.joint_angles[2] = msg.position[2]
 
     def CyberGear_init(self):
         self.cybergear_motor_ctrl = CyberGear.MotorCtrl('/dev/ttyUSB0', 921600, timeout=1)
@@ -51,9 +55,9 @@ class MotorJointStatePublisher:
 
         ######## Input the angle of motors (from -pi to pi) ########
 
-        self.joint_angles[0] = 0.0
-        self.joint_angles[1] = 0.0
-        self.joint_angles[2] = 0.0
+        # self.joint_angles[0] = 0.0
+        # self.joint_angles[1] = 0.0
+        # self.joint_angles[2] = 0.0
 
         control_mode_msg.can_id   = 1
         control_mode_msg.torque   = 0.0
