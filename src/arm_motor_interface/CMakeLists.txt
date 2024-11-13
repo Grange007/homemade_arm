@@ -208,6 +208,12 @@ catkin_install_python(PROGRAMS
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
+include_directories(motor_tools/GO-M8010-8/include)
+
+link_directories(motor_tools/GO-M8010-8/lib)
+
+set(MOTOR_SDK_LIBRARIES libUnitreeMotorSDK_M80106_Linux64.so)
 
 add_executable(partial_joint_state_publisher src/partial_joint_state_publisher.cpp)
+target_link_libraries(partial_joint_state_publisher ${MOTOR_SDK_LIBRARIES})
 target_link_libraries(partial_joint_state_publisher ${catkin_LIBRARIES})

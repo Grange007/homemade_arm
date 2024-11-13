@@ -6,12 +6,9 @@ import numpy as np
 import sys
 import os
 cur_dir = os.path.dirname(os.path.abspath(__file__))
-CyberGear_dir = os.path.abspath(os.path.join(cur_dir, '..', '..', 'motor_tools', 'CyberGear'))
-GO_M8010_8_dir = os.path.abspath(os.path.join(cur_dir, '..', '..', 'motor_tools', 'GO_M8010_8'))
+CyberGear_dir = os.path.abspath(os.path.join(cur_dir, '..', 'motor_tools', 'CyberGear'))
 if CyberGear_dir not in sys.path:
     sys.path.append(CyberGear_dir)
-if GO_M8010_8_dir not in sys.path:
-    sys.path.append(GO_M8010_8_dir)
 import CyberGear
 # import GO_M8010_8
 
@@ -46,19 +43,9 @@ class MotorJointStatePublisher:
         self.cybergear_motor_ctrl.enable(enable_msg)
 
     def timer_callback(self, event):
-        # self.test_counter += 0.01
-        # if self.test_counter > 3.14:
-        #     self.test_counter = -3.14
-        # self.joint_angles = [self.test_counter, self.test_counter, self.test_counter, self.test_counter, self.test_counter]
-
         control_mode_msg = CyberGear.ControlModeMsg()
 
         ######## Input the angle of motors (from -pi to pi) ########
-
-        # self.joint_angles[0] = 0.0
-        # self.joint_angles[1] = 0.0
-        # self.joint_angles[2] = 0.0
-
         control_mode_msg.can_id   = 1
         control_mode_msg.torque   = 0.0
         control_mode_msg.position = 0.0
