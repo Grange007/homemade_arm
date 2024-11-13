@@ -7,7 +7,7 @@ link_directories(lib)
 
 set(EXTRA_LIBS libUnitreeMotorSDK_M80106_Linux64.so)
 
-add_executable(start src/start.cpp)
+add_executable(start example/start.cpp)
 target_link_libraries(start ${EXTRA_LIBS})
-add_executable(stop src/stop.cpp)
+add_executable(stop example/stop.cpp)
 target_link_libraries(stop ${EXTRA_LIBS})

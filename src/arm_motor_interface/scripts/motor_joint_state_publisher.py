@@ -27,7 +27,7 @@ class MotorJointStatePublisher:
         self.joint_angles[2] = msg.position[2]
 
     def CyberGear_init(self):
-        self.cybergear_motor_ctrl = CyberGear.MotorCtrl('/dev/ttyUSB0', 921600, timeout=1)
+        self.cybergear_motor_ctrl = CyberGear.MotorCtrl('/dev/ttyUSB1', 921600, timeout=1)
         enable_msg = CyberGear.EnableMsg()
         enable_msg.can_id  = 1
         enable_msg.host_id = 253
