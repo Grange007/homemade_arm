@@ -10,7 +10,6 @@ CyberGear_dir = os.path.abspath(os.path.join(cur_dir, '..', 'motor_tools', 'Cybe
 if CyberGear_dir not in sys.path:
     sys.path.append(CyberGear_dir)
 import CyberGear
-# import GO_M8010_8
 
 class MotorJointStatePublisher:
     def __init__(self) -> None:
@@ -19,12 +18,7 @@ class MotorJointStatePublisher:
         self.joint_angles = [0.0, 0.0, 0.0, 0.0, 0.0]
         self.joint_names = ['joint1', 'joint2', 'joint3', 'joint4', 'joint5']
         self.joint_state = JointState()
-
-        self.test_counter = 0
-
         self.CyberGear_init()
-        # self.GO_M8010_8_init()
-
         self.timer = rospy.Timer(rospy.Duration(0.1), self.timer_callback)
 
     def unitree_joint_state_callback(self, msg):

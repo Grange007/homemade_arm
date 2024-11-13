@@ -60,7 +60,6 @@ int main(int argc, char **argv)
     serial.sendRecv(&cmd,&data);
     if (data.correct)
       joint_angles[1] = data.Pos;
-    joint_angles[1] = counter;
 
     cmd.motorType = MotorType::GO_M8010_6;
     cmd.id = 2;
