@@ -30,9 +30,9 @@ int main(int argc, char **argv)
 
 
     // ************************* Assign joint angles here *******************
-    joint_angles[0] = counter;
-    joint_angles[1] = counter;
-    joint_angles[2] = counter;
+    joint_angles[0] = 0;
+    joint_angles[1] = 0;
+    joint_angles[2] = 0;
 
     msg.position = {joint_angles[0], joint_angles[1], joint_angles[2]};
 
