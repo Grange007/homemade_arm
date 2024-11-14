@@ -7,17 +7,24 @@ logging.basicConfig(filename='CyberGear.log', filemode='w', level=logging.DEBUG,
 
 PARAMETERS = {
     "run_mode":      {"index": 0x7005, "format": "u8", "mod": "rw"},
-    "iq_ref":        {"index": 0x7006, "format": "f",  "mod": "rw"},
-    "spd_ref":       {"index": 0x700A, "format": "f",  "mod": "rw"},
-    "limit_torque":  {"index": 0x700B, "format": "f",  "mod": "rw"},
-    "cur_kp":        {"index": 0x7010, "format": "f",  "mod": "rw"},
-    "cur_ki":        {"index": 0x7011, "format": "f",  "mod": "rw"},
-    "cur_filt_gain": {"index": 0x7014, "format": "f",  "mod": "rw"},
+    "iq_ref":        {"index": 0x7006, "format": "f",  "mod": "rw", "min": -23.0, "max": 23.0},
+    "spd_ref":       {"index": 0x700A, "format": "f",  "mod": "rw", "min": -30.0, "max": 30.0},
+    "limit_torque":  {"index": 0x700B, "format": "f",  "mod": "rw", "min": 0.0, "max": 12.0},
+    "cur_kp":        {"index": 0x7010, "format": "f",  "mod": "rw", "default": 0.125},
+    "cur_ki":        {"index": 0x7011, "format": "f",  "mod": "rw", "default": 0.0158},
+    "cur_filt_gain": {"index": 0x7014, "format": "f",  "mod": "rw", "default": 0.1},
     "loc_ref":       {"index": 0x7016, "format": "f",  "mod": "rw"},
-    "limit_spd":     {"index": 0x7017, "format": "f",  "mod": "rw"},
-    "limit_cur":     {"index": 0x7018, "format": "f",  "mod": "rw"},
+    "limit_spd":     {"index": 0x7017, "format": "f",  "mod": "rw", "min": 0.0, "max": 30.0},
+    "limit_cur":     {"index": 0x7018, "format": "f",  "mod": "rw", "min": 0.0, "max": 23.0},
     "mechPos":       {"index": 0x7019, "format": "f",  "mod": "r"},
     "mechVel":       {"index": 0x701A, "format": "f",  "mod": "r"},
+}
+
+RUN_MODES = {
+    "control_mode":  0,
+    "position_mode": 1,
+    "velocity_mode": 2,
+    "current_mode":  3,
 }
 
 
@@ -117,8 +124,8 @@ class EnableMsg():
 
     def encode(self):
         type    = 0x03
-        can_id  = self.can_id << 3 | 0x04
         host_id = self.host_id
+        can_id  = self.can_id << 3 | 0x04
         length  = 0x08
 
         data = [type << 3, host_id >> 5, host_id << 3 & 0xff | can_id >> 8, can_id & 0xff,
@@ -137,8 +144,8 @@ class DisableMsg():
 
     def encode(self):
         type    = 0x04
-        can_id  = self.can_id << 3 | 0x04
         host_id = self.host_id
+        can_id  = self.can_id << 3 | 0x04
         length  = 0x08
         fault   = 0x01 if self.fault else 0x00
 
@@ -151,23 +158,28 @@ class DisableMsg():
 
 class ParamReadMsg():
 
-    def __init__(self, can_id=1, param=None, msg=None):
+    def __init__(self, can_id=1, host_id=255, param=None, msg=None):
         self.can_id = can_id
+        self.host_id = host_id
         self.param  = param
         self.msg    = msg
 
     def encode(self):
-        type   = 0x11
-        can_id = self.can_id << 3 | 0x04
-        index  = PARAMETERS[self.param]["index"]
-        len    = 0x80
+        type    = 0x11
+        host_id = self.host_id
+        can_id  = self.can_id << 3 | 0x04
+        index   = PARAMETERS[self.param]["index"]
+        length  = 0x08
 
-        data = [type << 3, 0x00, can_id >> 8, can_id & 0xff,
-                len, index >> 8, index & 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-        msg = "41 54 " + ' '.join(f'{byte:02X}' for byte in data) + " 0d 0a"
+        data = [type << 3, host_id >> 5, host_id << 3 & 0xff | can_id >> 8, can_id & 0xff,
+                length, index >> 8, index & 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+        msg = "41 54 " + ' '.join(f'{byte:02x}' for byte in data) + " 0d 0a"
         return msg
 
     def decode(self):
+        # TODO
+        return False
+
         if len(self.msg) != 17:
             logging.warning("Invalid message.")
             return False
@@ -224,14 +236,31 @@ class ParamReadMsg():
 
 class ParamWriteMsg():
 
-    def __init__(self, can_id=1, param=None, value=None):
-        self.can_id = can_id
-        self.param  = param
-        self.value  = value
+    def __init__(self, can_id=1, host_id=255, param=None, value=None):
+        self.can_id  = can_id
+        self.host_id = host_id
+        self.param   = param
+        self.value   = value
 
     def encode(self):
-        # TODO
-        return None
+        type    = 0x12
+        host_id = self.host_id
+        can_id  = self.can_id << 3 | 0x04
+        length  = 0x08
+        index   = PARAMETERS[self.param]["index"]
+        if "min" in PARAMETERS[self.param] and "max" in PARAMETERS[self.param]:
+            value = min(max(self.value, PARAMETERS[self.param]["min"]), PARAMETERS[self.param]["max"])
+            value = int((value - PARAMETERS[self.param]["min"]) / (PARAMETERS[self.param]["max"] - PARAMETERS[self.param]["min"]) * 0xffffffff)
+        elif self.param == "run_mode":
+            value = RUN_MODES[self.value] << 24
+        else:
+            value = self.value
+        
+        data = [type << 3, host_id >> 5, host_id << 3 & 0xff | can_id >> 8, can_id & 0xff,
+                length, index >> 8, index & 0xff, 0x00, 0x00, value >> 24, value >> 16 & 0xff, value >> 8 & 0xff, value & 0xff]
+        msg = "41 54 " + ' '.join(f'{byte:02x}' for byte in data) + " 0d 0a"
+        logging.info("paramWriteMsg: " + msg)
+        return msg
 
 
 class MotorCtrl():
@@ -277,6 +306,16 @@ class MotorCtrl():
             self.serial.write(bytes.fromhex(send_msg.encode()))
         except:
             logging.error("Failed to send disableMsg.")
+            return None
+        recv_msg = FeedbackMsg(self.serial.read(17))
+        if recv_msg.decode():
+            return recv_msg
+        
+    def paramWrite(self, send_msg):
+        try:
+            self.serial.write(bytes.fromhex(send_msg.encode()))
+        except:
+            logging.error("Failed to send paramWriteMsg.")
             return None
         recv_msg = FeedbackMsg(self.serial.read(17))
         if recv_msg.decode():
