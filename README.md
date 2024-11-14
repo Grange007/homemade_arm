@@ -11,5 +11,11 @@ rosdep install -y --from-paths . --ignore-src --rosdistro noetic
 cd ..
 catkin_make
 source ./devel/setup.sh
-roslaunch ave_arm_config ave_arm.launch
+roslaunch ave_arm_v2 ave_arm_v2.launch
+```
+
+To run the trajectory executor:
+
+```python-repl
+rosrun arm_motor_interface traj_executor.py
 ```
