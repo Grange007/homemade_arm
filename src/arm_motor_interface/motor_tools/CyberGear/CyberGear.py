@@ -263,7 +263,7 @@ class ParamWriteMsg():
         return msg
 
 
-class MotorCtrl():
+class MotorController():
 
     def __init__(self, port='/dev/ttyUSB0', baudrate=921600, timeout=1):
         self.serial = serial.Serial(port, baudrate, timeout=timeout)
