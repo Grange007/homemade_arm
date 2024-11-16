@@ -17,20 +17,20 @@ class Traj_executor:
         self.traj_subscriber = rospy.Subscriber("/arm_controller/follow_joint_trajectory/goal", FollowJointTrajectoryActionGoal, self.traj_goal_callback)
 
         self.CyberGear_init()
-        self.timer = rospy.Timer(rospy.Duration(self.time_from_start[0]), partial(self.execute, 1), oneshot=True)
+        self.timer = rospy.Timer(rospy.Duration(self.time_from_start[0]), partial(self.execute, 0), oneshot=True)
 
     def CyberGear_init(self):
-        self.cybergear_motor_ctrl = CyberGear.MotorCtrl('/dev/ttyUSB1', 921600, timeout=1)
+        self.cybergear_motor_controller = CyberGear.MotorController('/dev/ttyUSB0', 921600, timeout=1)
         # joint 4
         enable_msg_1 = CyberGear.EnableMsg()
         enable_msg_1.can_id  = 1
         enable_msg_1.host_id = 253
-        self.cybergear_motor_ctrl.enable(enable_msg_1)
+        self.cybergear_motor_controller.enable(enable_msg_1)
         # joint 5
         enable_msg_2 = CyberGear.EnableMsg()
         enable_msg_2.can_id  = 2
         enable_msg_2.host_id = 253
-        self.cybergear_motor_ctrl.enable(enable_msg_2)
+        self.cybergear_motor_controller.enable(enable_msg_2)
 
     def traj_goal_callback(self, msg):
         self.goal_id = msg.goal_id
@@ -57,11 +57,6 @@ class Traj_executor:
         rospy.loginfo(self.time_from_start)
 
     def execute(self, counter):
-        if counter == len(self.time_from_start):
-            return
-        period = self.time_from_start[counter] - self.time_from_start[counter-1]
-        self.timer = rospy.Timer(rospy.Duration(period), partial(self.execute, counter+1), oneshot=True)
-
         # joint 4
         control_mode_msg_1 = CyberGear.ControlModeMsg()
         control_mode_msg_1.can_id   = 1
@@ -70,7 +65,7 @@ class Traj_executor:
         control_mode_msg_1.velocity = self.velocities[counter][3]
         control_mode_msg_1.Kp       = 1.0
         control_mode_msg_1.Ki       = 0.1
-        feedback_msg_1 = self.cybergear_motor_ctrl.controlMode(control_mode_msg_1)
+        feedback_msg_1 = self.cybergear_motor_controller.controlMode(control_mode_msg_1)
         if feedback_msg_1 is not None:
             print(feedback_msg_1.position)
 
@@ -82,9 +77,15 @@ class Traj_executor:
         control_mode_msg_2.velocity = self.velocities[counter][4]
         control_mode_msg_2.Kp       = 1.0
         control_mode_msg_2.Ki       = 0.1
-        feedback_msg_2 = self.cybergear_motor_ctrl.controlMode(control_mode_msg_2)
+        feedback_msg_2 = self.cybergear_motor_controller.controlMode(control_mode_msg_2)
         if feedback_msg_2 is not None:
             print(feedback_msg_2.position)
+
+        if counter == len(self.time_from_start) - 1:
+            return
+        period = self.time_from_start[counter+1] - self.time_from_start[counter]
+        self.timer = rospy.Timer(rospy.Duration(period), partial(self.execute, counter+1), oneshot=True)
+
         
 if __name__ == '__main__':
     rospy.init_node('number_counter')

@@ -22,14 +22,14 @@ class MotorJointStatePublisher:
         self.timer = rospy.Timer(rospy.Duration(0.1), self.timer_callback)
 
     def CyberGear_init(self):
-        self.cybergear_motor_ctrl = CyberGear.MotorCtrl('/dev/ttyUSB1', 921600, timeout=1)
+        self.cybergear_motor_controller = CyberGear.MotorController('/dev/ttyUSB1', 921600, timeout=1)
         enable_msg = CyberGear.EnableMsg()
         enable_msg.can_id  = 1
         enable_msg.host_id = 253
-        self.cybergear_motor_ctrl.enable(enable_msg)
+        self.cybergear_motor_controller.enable(enable_msg)
         enable_msg.can_id  = 2
         enable_msg.host_id = 253
-        self.cybergear_motor_ctrl.enable(enable_msg)
+        self.cybergear_motor_controller.enable(enable_msg)
 
     def unitree_joint_state_callback(self, msg):
         self.joint_angles[0] = msg.position[0]
@@ -46,7 +46,7 @@ class MotorJointStatePublisher:
         control_mode_msg.velocity = 0.0
         control_mode_msg.Kp       = 0.0
         control_mode_msg.Ki       = 0.0
-        feedback_msg = self.cybergear_motor_ctrl.controlMode(control_mode_msg)
+        feedback_msg = self.cybergear_motor_controller.controlMode(control_mode_msg)
         if feedback_msg is not None:
             self.joint_angles[3] = (feedback_msg.position + 4*np.pi) % (2*np.pi) - np.pi
 
@@ -56,7 +56,7 @@ class MotorJointStatePublisher:
         control_mode_msg.velocity = 0.0
         control_mode_msg.Kp       = 0.0
         control_mode_msg.Ki       = 0.0
-        feedback_msg = self.cybergear_motor_ctrl.controlMode(control_mode_msg)
+        feedback_msg = self.cybergear_motor_controller.controlMode(control_mode_msg)
         if feedback_msg is not None:
             self.joint_angles[4] = (feedback_msg.position + 4*np.pi) % (2*np.pi) - np.pi
 
