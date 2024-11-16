@@ -21,11 +21,6 @@ class MotorJointStatePublisher:
         self.CyberGear_init()
         self.timer = rospy.Timer(rospy.Duration(0.1), self.timer_callback)
 
-    def unitree_joint_state_callback(self, msg):
-        self.joint_angles[0] = msg.position[0]
-        self.joint_angles[1] = msg.position[1]
-        self.joint_angles[2] = msg.position[2]
-
     def CyberGear_init(self):
         self.cybergear_motor_ctrl = CyberGear.MotorCtrl('/dev/ttyUSB1', 921600, timeout=1)
         enable_msg = CyberGear.EnableMsg()
@@ -35,6 +30,11 @@ class MotorJointStatePublisher:
         enable_msg.can_id  = 2
         enable_msg.host_id = 253
         self.cybergear_motor_ctrl.enable(enable_msg)
+
+    def unitree_joint_state_callback(self, msg):
+        self.joint_angles[0] = msg.position[0]
+        self.joint_angles[1] = msg.position[1]
+        self.joint_angles[2] = msg.position[2]
 
     def timer_callback(self, event):
         control_mode_msg = CyberGear.ControlModeMsg()
