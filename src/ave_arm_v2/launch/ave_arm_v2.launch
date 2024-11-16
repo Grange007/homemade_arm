@@ -28,7 +28,8 @@
 
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" />
   <node name="unitree_joint_state_publisher" pkg="arm_motor_interface" type="partial_joint_state_publisher" output="screen" />
-  <node name="motor_joint_state_publisher" pkg="arm_motor_interface" type="motor_joint_state_publisher_test.py" output="screen" />
+  <node name="trajectory_executor" pkg="arm_motor_interface" type="traj_executor.py" output="screen" />
+  <!-- <node name="motor_joint_state_publisher" pkg="arm_motor_interface" type="motor_joint_state_publisher.py" output="screen" /> -->
 
 
   <node name="action_server" pkg="arm_motor_interface" type="moveit_action_server.py" output="screen" />
