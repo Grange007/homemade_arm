@@ -6,7 +6,7 @@
   <!-- By default, we do not start a database (it can be large) -->
   <arg name="db" default="false" />
   <!-- Allow user to specify database location -->
-  <arg name="db_path" default="$(find ave_arm_config)/default_warehouse_mongo_db" />
+  <arg name="db_path" default="$(find ave_arm_v2)/default_warehouse_mongo_db" />
 
   <!-- By default, we are not in debug mode -->
   <arg name="debug" default="false" />
@@ -15,8 +15,7 @@
   <arg name="load_robot_description" default="true"/>
 
   <!-- Choose controller manager: fake, simple, or ros_control -->
-  <!-- <arg name="moveit_controller_manager" default="ros_control" /> -->
-  <arg name="moveit_controller_manager" default="simple" />
+  <arg name="moveit_controller_manager" default="fake" />
   <!-- Set execution mode for fake execution controllers -->
   <arg name="fake_execution_type" default="interpolate" />
 
@@ -25,21 +24,24 @@
   <arg name="use_rviz" default="true" />
 
   <!-- If needed, broadcast static tf for robot root -->
-  <node pkg="tf2_ros" type="static_transform_publisher" name="virtual_joint_broadcaster_0" args="0 0 0 0 0 0 world_frame dummy" />
+  <node pkg="tf2_ros" type="static_transform_publisher" name="virtual_joint_broadcaster_0" args="0 0 0 0 0 0 world base_link" />
 
+  <group if="$(eval arg('moveit_controller_manager') == 'fake')">
     <!-- We do not have a real robot connected, so publish fake joint states via a joint_state_publisher
          MoveIt's fake controller's joint states are considered via the 'source_list' parameter -->
-  <!-- <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" unless="$(arg use_gui)">
-    <rosparam param="source_list">[move_group/fake_controller_joint_states]</rosparam>
-  </node>  -->
-  <!-- If desired, a GUI version is available allowing to move the simulated robot around manually
-        This corresponds to moving around the real robot without the use of MoveIt. -->
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" unless="$(arg use_gui)">
+      <rosparam param="source_list">[move_group/fake_controller_joint_states]</rosparam>
+    </node>
+    <!-- If desired, a GUI version is available allowing to move the simulated robot around manually
+         This corresponds to moving around the real robot without the use of MoveIt. -->
+    <node name="joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" if="$(arg use_gui)">
+      <rosparam param="source_list">[move_group/fake_controller_joint_states]</rosparam>
+    </node>
 
-  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" />
-  <node name="unitree_joint_state_publisher" pkg="arm_motor_interface" type="partial_joint_state_publisher" output="screen" />
-  <node name="motor_joint_state_publisher" pkg="arm_motor_interface" type="motor_joint_state_publisher_test.py" output="screen" />
+    <!-- Given the published joint states, publish tf for the robot links -->
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" />
+  </group>
 
-  <node name="action_server" pkg="arm_motor_interface" type="moveit_action_server.py" output="screen" />
   <!-- Run the main MoveIt executable without trajectory execution (we do not have controllers configured by default) -->
   <include file="$(dirname)/move_group.launch">
     <arg name="allow_trajectory_execution" value="true"/>
@@ -62,5 +64,4 @@
     <arg name="moveit_warehouse_database_path" value="$(arg db_path)"/>
   </include>
 
-  <!-- <include file="$(dirname)/ros_controllers.launch"/> -->
 </launch>

@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   sensor_msgs
   std_msgs
+  control_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -164,6 +165,7 @@ catkin_install_python(PROGRAMS
   scripts/motor_joint_state_publisher.py
   scripts/motor_joint_state_publisher_test.py
   scripts/moveit_action_server.py
+  scripts/traj_executor.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
