@@ -26,7 +26,7 @@ class Unitree_Traj_executor
     {
         joint_state_pub = nh->advertise<sensor_msgs::JointState>("/unitree_joint_states", 1);    
         unitree_traj_sub = nh->subscribe("/arm_controller/follow_joint_trajectory/goal", 1, &Unitree_Traj_executor::traj_goal_callback, this);
-        
+
         positions.push_back(std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
         velocities.push_back(std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
         accelerations.push_back(std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
@@ -41,7 +41,7 @@ class Unitree_Traj_executor
         // velocities.clear();
         // accelerations.clear();
         // time_from_start.clear();
-        ros::Time now = ros::Time::now().toSec();
+        double now = ros::Time::now().toSec();
         for (int i = 0; i < msg->goal.trajectory.points.size(); i++)
         {
             positions.push_back(msg->goal.trajectory.points[i].positions);
@@ -53,7 +53,7 @@ class Unitree_Traj_executor
 
     void timer_callback()
     {
-        ros::Time now = ros::Time::now().toSec();
+        double now = ros::Time::now().toSec();
         int counter = 0;
         for (int i = 0; i < time_from_start.size(); i++)
         {
