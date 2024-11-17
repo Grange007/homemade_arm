@@ -19,7 +19,7 @@ class Unitree_Traj_executor
     std::vector<std::vector<double>> velocities;
     std::vector<std::vector<double>> accelerations;
     std::vector<double> time_from_start;
-    SerialPort serial = SerialPort("/dev/ttyUSB0");
+    SerialPort serial = SerialPort("/dev/ttyUSB1");
 
     public:
     Unitree_Traj_executor(ros::NodeHandle *nh) 

@@ -21,6 +21,7 @@ class MotorJointStatePublisher:
         self.joint_state = JointState()
 
         self.CyberGear_init()
+        rospy.sleep(1)
         self.timer = rospy.Timer(rospy.Duration(0.1), self.timer_callback)
 
     def CyberGear_init(self):

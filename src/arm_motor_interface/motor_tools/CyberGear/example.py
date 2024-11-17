@@ -1,8 +1,21 @@
 import time
 import CyberGear
 
-motor_controller = CyberGear.MotorController('COM7', 921600, timeout=1)
+motor_controller = CyberGear.MotorController('/dev/ttyUSB0', 921600, timeout=1)
 
+set_zero_msg = CyberGear.SetZeroMsg()
+set_zero_msg.can_id = 1
+set_zero_msg.host_id = 253
+feedback_msg = motor_controller.setZero(set_zero_msg)
+if feedback_msg != None:
+    print("state:   ", feedback_msg.state)
+    print("error:   ", feedback_msg.error)
+    print("can_id:  ", feedback_msg.can_id)
+    print("host_id: ", feedback_msg.host_id)
+    print("position:", feedback_msg.position)
+    print("velocity:", feedback_msg.velocity)
+    print("torque:  ", feedback_msg.torque)
+    print("temp:    ", feedback_msg.temp)
 
 enable_msg = CyberGear.EnableMsg()
 enable_msg.can_id  = 1
@@ -22,9 +35,9 @@ time.sleep(0.5)
 control_mode_msg = CyberGear.ControlModeMsg()
 control_mode_msg.can_id   = 1
 control_mode_msg.torque   = 0.0
-control_mode_msg.position = 3.0
+control_mode_msg.position = 0.0
 control_mode_msg.velocity = 0.0
-control_mode_msg.Kp       = 0.1
+control_mode_msg.Kp       = 0.0
 control_mode_msg.Ki       = 0.0
 feedback_msg = motor_controller.controlMode(control_mode_msg)
 if feedback_msg != None:
