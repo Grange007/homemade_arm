@@ -156,6 +156,25 @@ class DisableMsg():
         return msg
 
 
+class SetZeroMsg():
+
+    def __init__(self, can_id=1, host_id=255):
+        self.can_id  = can_id
+        self.host_id = host_id
+
+    def encode(self):
+        type    = 0x06
+        host_id = self.host_id
+        can_id  = self.can_id << 3 | 0x04
+        length  = 0x08
+
+        data = [type << 3, host_id >> 5, host_id << 3 & 0xff | can_id >> 8, can_id & 0xff,
+                length, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+        msg = "41 54 " + ' '.join(f'{byte:02x}' for byte in data) + " 0d 0a"
+        logging.info("setZeroMsg: " + msg)
+        return msg
+
+
 class ParamReadMsg():
 
     def __init__(self, can_id=1, host_id=255, param=None, msg=None):
@@ -310,7 +329,17 @@ class MotorController():
         recv_msg = FeedbackMsg(self.serial.read(17))
         if recv_msg.decode():
             return recv_msg
-        
+    
+    def setZero(self, send_msg):
+        try:
+            self.serial.write(bytes.fromhex(send_msg.encode()))
+        except:
+            logging.error("Failed to send setZeroMsg.")
+            return None
+        recv_msg = FeedbackMsg(self.serial.read(17))
+        if recv_msg.decode():
+            return recv_msg
+
     def paramWrite(self, send_msg):
         try:
             self.serial.write(bytes.fromhex(send_msg.encode()))
