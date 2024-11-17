@@ -32,7 +32,7 @@ class Unitree_Traj_executor
         accelerations.push_back(std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
         time_from_start.push_back(0);
 
-        serial = SerialPort("/dev/ttyUSB0");
+        serial = SerialPort("/dev/ttyUSB1");
         traj_executor = nh->createTimer(ros::Duration(0.1), std::bind(&Unitree_Traj_executor::timer_callback, this));
     }
 
