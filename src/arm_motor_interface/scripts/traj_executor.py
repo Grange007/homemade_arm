@@ -1,5 +1,4 @@
 import rospy
-import numpy as np
 
 from control_msgs.msg import FollowJointTrajectoryActionGoal
 from sensor_msgs.msg import JointState
@@ -49,6 +48,7 @@ class Traj_executor:
         self.cybergear_motor_controller.enable(enable_msg_2)
 
     def traj_goal_callback(self, msg):
+        now = rospy.Time.now().to_sec()
         self.goal_id = msg.goal_id
         self.joint_names = msg.goal.trajectory.joint_names
         self.points = msg.goal.trajectory.points
@@ -57,7 +57,7 @@ class Traj_executor:
             self.positions.append(point.positions)
             self.velocities.append(point.velocities)
             self.accelerations.append(point.accelerations)
-            self.time_from_start.append(point.time_from_start.to_sec())
+            self.time_from_start.append(point.time_from_start.to_sec() + now)
         
         # self.positions[i] is a list of positions of each joint at the ith time point
         # self.velocities[i] is a list of velocities of each joint at the ith time point

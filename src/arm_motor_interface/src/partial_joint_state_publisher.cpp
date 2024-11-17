@@ -1,4 +1,5 @@
 ﻿#include <unistd.h>
+#include <cmath>
 
 #include "ros/ros.h"
 #include "std_msgs/String.h"
@@ -33,9 +34,9 @@ int main(int argc, char **argv)
     if (data_1.correct)
     {
       if (data_1.Pos < 0)
-        joint_angles[0] = -((-data_1.Pos) % 6.28);
+        joint_angles[0] = -fmod(-data_1.Pos, 6.28);
       else
-        joint_angles[0] = data_1.Pos % 6.28;
+        joint_angles[0] = fmod(data_1.Pos, 6.28);
     }
     // joint 2
     MotorCmd cmd_2;
@@ -52,9 +53,9 @@ int main(int argc, char **argv)
     if (data_2.correct)
     {
       if (data_2.Pos < 0)
-        joint_angles[1] = -((-data_2.Pos) % 6.28);
+        joint_angles[1] = -fmod(-data_2.Pos, 6.28);
       else
-        joint_angles[1] = data_2.Pos % 6.28;
+        joint_angles[1] = fmod(data_2.Pos, 6.28);
     }
     // joint 3
     MotorCmd cmd_3;
@@ -71,9 +72,9 @@ int main(int argc, char **argv)
     if (data_3.correct)
     {
       if (data_3.Pos < 0)
-        joint_angles[2] = -((-data_3.Pos) % 6.28);
+        joint_angles[2] = -fmod(-data_3.Pos, 6.28);
       else
-        joint_angles[2] = data_3.Pos % 6.28;
+        joint_angles[2] = fmod(data_3.Pos, 6.28);
     }
 
     sensor_msgs::JointState msg;
