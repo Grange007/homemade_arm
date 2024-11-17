@@ -52,7 +52,10 @@ class MotorJointStatePublisher:
         control_mode_msg_1.Ki       = 0.0
         feedback_msg_1 = self.cybergear_motor_controller.controlMode(control_mode_msg_1)
         if feedback_msg_1 is not None:
-            self.joint_angles[3] = (feedback_msg_1.position + 4*np.pi) % (2*np.pi) - np.pi
+            if feedback_msg_1.position < 0:
+                self.joint_angles[3] = -((-feedback_msg_1.position) % (2*np.pi))
+            else:
+                self.joint_angles[3] = feedback_msg_1.position % (2*np.pi)
         # joint 5
         control_mode_msg_2 = CyberGear.ControlModeMsg()
         control_mode_msg_2.can_id   = 2
@@ -63,7 +66,10 @@ class MotorJointStatePublisher:
         control_mode_msg_2.Ki       = 0.0
         feedback_msg_2 = self.cybergear_motor_controller.controlMode(control_mode_msg_2)
         if feedback_msg_2 is not None:
-            self.joint_angles[4] = (feedback_msg_2.position + 4*np.pi) % (2*np.pi) - np.pi
+            if feedback_msg_2.position < 0:
+                self.joint_angles[4] = -((-feedback_msg_2.position) % (2*np.pi))
+            else:
+                self.joint_angles[4] = feedback_msg_2.position % (2*np.pi)
 
         self.joint_state.header.stamp = rospy.Time.now()
         self.joint_state.name = self.joint_names
