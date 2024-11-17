@@ -29,7 +29,7 @@ int main(int argc, char **argv)
     msg.name = {"motor1", "motor2", "motor3"};
 
 
-    // ************************* Assign joint angles here *******************
+    // ******************* Assign joint angles here *******************
     cmd.motorType = MotorType::GO_M8010_6;
     cmd.id = 0;
     cmd.mode = 1;
