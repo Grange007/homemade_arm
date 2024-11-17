@@ -17,8 +17,8 @@ class MotorJointStatePublisher:
     def __init__(self) -> None:
         self.joint_state_pub = rospy.Publisher('joint_states', JointState, queue_size=1)
         self.unitree_joint_state_sub = rospy.Subscriber('unitree_joint_states', JointState, self.unitree_joint_state_callback)
-        self.joint_angles = [0.0, 0.0, 0.0, 0.0, 0.0]
-        self.joint_names = ['joint1', 'joint2', 'joint3', 'joint4', 'joint5']
+        self.joint_angles = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        self.joint_names = ['joint1', 'joint2', 'joint3', 'joint4', 'joint5', 'joint6']
         self.joint_state = JointState()
         self.CyberGear_init()
         self.timer = rospy.Timer(rospy.Duration(0.1), self.timer_callback)

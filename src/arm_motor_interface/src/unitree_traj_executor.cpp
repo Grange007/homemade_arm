@@ -7,7 +7,8 @@
 #include <vector>
 
 
-class Unitree_Traj_executor {
+class Unitree_Traj_executor
+{
     private:
     ros::Publisher joint_state_pub;
     ros::Subscriber unitree_traj_sub;
@@ -28,21 +29,69 @@ class Unitree_Traj_executor {
         velocities.push_back(std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
         accelerations.push_back(std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
         time_from_start.push_back(0);
-
+        SerialPort serial("/dev/ttyUSB1");
     }
 
     void timer_callback()
     {
-        /* The Timer callback */
+        ros::Time now = ros::Time::now();
+        int counter = 0;
+        for (int i = 0; i < time_from_start.size(); i++)
+        {
+            if (now.toSec() < time_from_start[i])
+                break;
+            counter = i;
+        }
+
+        // joint 1
+        MotorCmd cmd_1;
+        MotorData data_1;
+        cmd_1.motorType = MotorType::GO_M8010_6;
+        cmd_1.id = 0;
+        cmd_1.mode = 1;
+        cmd_1.T = 0.0;
+        cmd_1.W = this->velocities[counter][0] * 6.33;
+        cmd_1.Pos = this->positions[counter][0];
+        cmd_1.K_P = 0.1;
+        cmd_1.K_W = 0.05;
+        serial.sendRecv(&cmd_1, &data_1);
+        if (data_1.correct)
+            joint_angles[0] = data_1.Pos / 6.33;
+        // joint 2
+        MotorCmd cmd_2;
+        MotorData data_2;
+        cmd_2.motorType = MotorType::GO_M8010_6;
+        cmd_2.id = 1;
+        cmd_2.mode = 1;
+        cmd_2.T = 0.0;
+        cmd_2.W = this->velocities[counter][1] * 6.33;
+        cmd_2.Pos = this->positions[counter][1];
+        cmd_2.K_P = 0.1;
+        cmd_2.K_W = 0.05;
+        serial.sendRecv(&cmd_2, &data_2);
+        if (data_2.correct)
+            joint_angles[1] = data_2.Pos / 6.33;
+        // joint 3
+        MotorCmd cmd_3;
+        MotorData data_3;
+        cmd_3.motorType = MotorType::GO_M8010_6;
+        cmd_3.id = 2;
+        cmd_3.mode = 1;
+        cmd_3.T = 0.0;
+        cmd_3.W = this->velocities[counter][2] * 6.33;
+        cmd_3.Pos = this->positions[counter][2];
+        cmd_3.K_P = 0.1;
+        cmd_3.K_W = 0.05;
+        serial.sendRecv(&cmd_3, &data_3);
+        if (data_3.correct)
+            joint_angles[2] = data_3.Pos / 6.33;
+
         sensor_msgs::JointState msg;
         msg.header.stamp = ros::Time::now();
         msg.name = {"motor1", "motor2", "motor3"};
-        for (int i = 0; i < 3; i++) {
-            msg.position.push_back(joint_angles[i]);
-        }
+        msg.position = {joint_angles[0], joint_angles[1], joint_angles[2]};
         joint_state_pub.publish(msg);
     }
-
 
     void traj_goal_callback(const control_msgs::FollowJointTrajectoryActionGoal::ConstPtr &msg) 
     {
@@ -58,6 +107,8 @@ class Unitree_Traj_executor {
         }   
     }
 };
+
+
 int main (int argc, char **argv)
 {
     ros::init(argc, argv, "number_counter");

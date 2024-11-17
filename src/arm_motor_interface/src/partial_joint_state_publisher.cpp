@@ -17,19 +17,13 @@ int main(int argc, char **argv)
 
   ros::Rate loop_rate(10);
 
-  SerialPort serial("/dev/ttyUSB0");
+  SerialPort serial("/dev/ttyUSB1");
   MotorCmd cmd;
   MotorData data;
 
   while (ros::ok())
   {
-    sensor_msgs::JointState msg;
-
-    msg.header.stamp = ros::Time::now();
-    msg.name = {"motor1", "motor2", "motor3"};
-
-
-    // ******************* Assign joint angles here *******************
+    // joint 1
     cmd.motorType = MotorType::GO_M8010_6;
     cmd.id = 0;
     cmd.mode = 1;
@@ -41,7 +35,7 @@ int main(int argc, char **argv)
     serial.sendRecv(&cmd,&data);
     if (data.correct)
       joint_angles[0] = data.Pos / 6.33;
-
+    // joint 2
     cmd.motorType = MotorType::GO_M8010_6;
     cmd.id = 1;
     cmd.mode = 1;
@@ -53,7 +47,7 @@ int main(int argc, char **argv)
     serial.sendRecv(&cmd,&data);
     if (data.correct)
       joint_angles[1] = data.Pos / 6.33;
-
+    // joint 3
     cmd.motorType = MotorType::GO_M8010_6;
     cmd.id = 2;
     cmd.mode = 1;
@@ -66,12 +60,13 @@ int main(int argc, char **argv)
     if (data.correct)
       joint_angles[2] = data.Pos / 6.33;
 
+    sensor_msgs::JointState msg;
+    msg.header.stamp = ros::Time::now();
+    msg.name = {"motor1", "motor2", "motor3"};
     msg.position = {joint_angles[0], joint_angles[1], joint_angles[2]};
-
     joint_state_pub.publish(msg);
 
     ros::spinOnce();
-
     loop_rate.sleep();
   }
   return 0;
