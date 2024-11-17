@@ -1,5 +1,4 @@
 import rospy
-import numpy as np
 
 from control_msgs.msg import FollowJointTrajectoryActionGoal
 from sensor_msgs.msg import JointState
