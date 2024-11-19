@@ -17,6 +17,15 @@ class EndGear:
             logging.info("串口已打开")
         except Exception as e:
             logging.error(f"未成功打开：{e}")
+            
+    def readdata(self):	
+        data = ""
+        while True:
+            char = self.ser.read().decode('utf-8')  # 逐个字符读取
+            data += char
+            if char == '!':  # 遇到 '!' 停止读取
+                break 
+        return data       
        
     def close_serial(self):
         if self.ser.is_open:
@@ -35,7 +44,7 @@ class EndGear:
         command_to_send = f"#{self.id:03d}PRAD!\n"
         self.ser.write(command_to_send.encode('utf-8'))
         logging.info("已发送指令：" + command_to_send)
-        data = self.ser.readline().decode('utf-8')
+        data = self.readdata()
         logging.info("已接收数据：" + data)
         return int(data[5:8])
 
@@ -43,7 +52,7 @@ class EndGear:
         command_to_send = f"#{self.id:03d}PID!\n"
         self.ser.write(command_to_send.encode('utf-8'))
         logging.info("已发送指令：" + command_to_send)
-        data = self.ser.readline().decode('utf-8')
+        data = self.readdata()
         logging.info("已接收数据：" + data)
         self.id = int(data[1:3])  # 更新 id 变量
         return self.id
@@ -61,5 +70,7 @@ class EndGear:
         command_to_send = f"#{self.id:03d}PULK!\n"
         self.ser.write(command_to_send.encode('utf-8'))
         logging.info("已发送指令：" + command_to_send)
-        data = self.ser.readline().decode('utf-8')
+        data = self.readdata()
         logging.info("已接收数据：" + data)
+    
+

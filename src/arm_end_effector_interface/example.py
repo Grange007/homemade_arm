@@ -1,5 +1,6 @@
 import logging
 import time
+import serial
 
 # 假设 EndGear 类已经定义在 EndGear.py 文件中
 from EndGear import EndGear
@@ -24,8 +25,8 @@ def main():
     
     time.sleep(1)
     # 获取 ID
-   # current_id = endgear.get_id()
-  #  print(f"当前 ID：{current_id}")
+    current_id = endgear.get_id()
+    print(f"当前 ID：{current_id}")
 
     # 发送数据
     position = 600
@@ -37,8 +38,8 @@ def main():
     time.sleep(2)
 
     # 获取位置
-  #  received_position = endgear.get_position()
-  #  print(f"当前位置：{received_position}")
+    received_position = endgear.get_position()
+    print(f"当前位置：{received_position}")
 
     # 释放扭矩
     endgear.release_torque()
@@ -51,4 +52,5 @@ def main():
 if __name__ == "__main__":
     print("程序开始执行")
     main()
+
     print("程序执行完毕")
