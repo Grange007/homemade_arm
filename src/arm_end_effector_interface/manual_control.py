@@ -8,17 +8,18 @@ def read_serial():
         try:
             data = ser.readline().decode('utf-8').strip()
             if data:
+                print(f"接收到数据：{data}")  # 调试信息
                 output_text.insert(tk.END, "接收到数据：" + data + '\n')
                 output_text.see(tk.END)
-        except:
-            pass
+        except Exception as e:
+            print(f"读取数据时出错：{e}")  # 调试信息
 
 def send_data():
     data = input_entry.get()
     if ser.is_open:
         # 将输入映射为指令
         if data.isdigit():
-            command_to_send = f"#000P{data}T1000!"
+            command_to_send = "#000P" + data + "T1000!"
         else:
             command_to_send = data
 
@@ -27,12 +28,16 @@ def send_data():
         output_text.insert(tk.END, "已发送指令：" + command_to_send + '\n')
         output_text.see(tk.END)
 
-         #自动发送“#000PRAD!”
-        ser.write("#000PRAD!\n".encode('utf-8'))
-        output_text.insert(tk.END, "已发送指令：#000PRAD!\n")
-        output_text.see(tk.END)
+        # 自动发送“#000PRAD!”延迟1秒
+       # threading.Timer(1.0, send_auto_command).start()
     else:
         output_text.insert(tk.END, "串口未打开\n")
+        output_text.see(tk.END)
+
+def send_auto_command():
+    if ser.is_open:
+        ser.write("#000PRAD!\n".encode('utf-8'))
+        output_text.insert(tk.END, "已发送指令：#000PRAD!\n")
         output_text.see(tk.END)
 
 def open_serial():
@@ -42,16 +47,19 @@ def open_serial():
         ser.open()
         output_text.insert(tk.END, "串口已打开\n")
         output_text.see(tk.END)
+        print("串口已打开")  # 调试信息
         threading.Thread(target=read_serial, daemon=True).start()
     except Exception as e:
         output_text.insert(tk.END, "无法打开串口：" + str(e) + '\n')
         output_text.see(tk.END)
+        print(f"无法打开串口：{e}")  # 调试信息
 
 def close_serial():
     if ser.is_open:
         ser.close()
         output_text.insert(tk.END, "串口已关闭\n")
         output_text.see(tk.END)
+        print("串口已关闭")  # 调试信息
 
 # 配置串口
 ser = serial.Serial()
