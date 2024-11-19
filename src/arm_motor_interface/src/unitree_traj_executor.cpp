@@ -19,7 +19,8 @@ class Unitree_Traj_executor
     std::vector<std::vector<double>> velocities;
     std::vector<std::vector<double>> accelerations;
     std::vector<double> time_from_start;
-    SerialPort serial = SerialPort("/dev/ttyUSB1");
+    SerialPort serial;
+    double zero_pos[3] = {0, 0, 0};
 
     public:
     Unitree_Traj_executor(ros::NodeHandle *nh) 
@@ -32,15 +33,36 @@ class Unitree_Traj_executor
         accelerations.push_back(std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
         time_from_start.push_back(0);
 
+        Untree_init();
         traj_executor = nh->createTimer(ros::Duration(0.1), std::bind(&Unitree_Traj_executor::timer_callback, this));
+    }
+
+    void Untree_init()
+    {
+        serial = SerialPort("/dev/ttyUSB0");
+
+        for (int motor_id = 0; motor_id < 3; motor_id++)
+        {
+            MotorCmd cmd;
+            MotorData data;
+            cmd.motorType = MotorType::GO_M8010_6;
+            cmd.id = motor_id;
+            cmd.mode = 1;
+            cmd.T = 0.0;
+            cmd.W = 0.0;
+            cmd.Pos = 0.0;
+            cmd.K_P = 0.0;
+            cmd.K_W = 0.0;
+            serial.sendRecv(&cmd, &data);
+            if (data.correct)
+                zero_pos[motor_id] = data.Pos;
+            else
+                motor_id--;
+        }
     }
 
     void traj_goal_callback(const control_msgs::FollowJointTrajectoryActionGoal::ConstPtr &msg) 
     {
-        // positions.clear();
-        // velocities.clear();
-        // accelerations.clear();
-        // time_from_start.clear();
         double now = ros::Time::now().toSec();
         for (int i = 0; i < msg->goal.trajectory.points.size(); i++)
         {
@@ -62,62 +84,26 @@ class Unitree_Traj_executor
             counter = i;
         }
 
-        // joint 1
-        MotorCmd cmd_1;
-        MotorData data_1;
-        cmd_1.motorType = MotorType::GO_M8010_6;
-        cmd_1.id = 0;
-        cmd_1.mode = 1;
-        cmd_1.T = 0.0;
-        cmd_1.W = this->velocities[counter][0] * 6.33;
-        cmd_1.Pos = this->positions[counter][0] * 6.33;
-        cmd_1.K_P = 0.05;
-        cmd_1.K_W = 0.0;
-        this->serial.sendRecv(&cmd_1, &data_1);
-        if (data_1.correct)
+        for (int motor_id = 0; motor_id < 3; motor_id++)
         {
-            if (data_1.Pos < 0)
-                joint_angles[0] = -fmod(-data_1.Pos, 6.28) / 6.33;
-            else
-                joint_angles[0] = fmod(data_1.Pos, 6.28) / 6.33;
-        }
-        // joint 2
-        MotorCmd cmd_2;
-        MotorData data_2;
-        cmd_2.motorType = MotorType::GO_M8010_6;
-        cmd_2.id = 1;
-        cmd_2.mode = 1;
-        cmd_2.T = 0.0;
-        cmd_2.W = this->velocities[counter][1] * 6.33;
-        cmd_2.Pos = this->positions[counter][1] * 6.33;
-        cmd_2.K_P = 0.05;
-        cmd_2.K_W = 0.0;
-        this->serial.sendRecv(&cmd_2, &data_2);
-        if (data_2.correct)
-        {
-            if (data_2.Pos < 0)
-                joint_angles[1] = -fmod(-data_2.Pos, 6.28) / 6.33;
-            else
-                joint_angles[1] = fmod(data_2.Pos, 6.28) / 6.33;
-        }
-        // joint 3
-        MotorCmd cmd_3;
-        MotorData data_3;
-        cmd_3.motorType = MotorType::GO_M8010_6;
-        cmd_3.id = 2;
-        cmd_3.mode = 1;
-        cmd_3.T = 0.0;
-        cmd_3.W = this->velocities[counter][2] * 6.33;
-        cmd_3.Pos = this->positions[counter][2] * 6.33;
-        cmd_3.K_P = 0.05;
-        cmd_3.K_W = 0.0;
-        this->serial.sendRecv(&cmd_3, &data_3);
-        if (data_3.correct)
-        {
-            if (data_3.Pos < 0)
-                joint_angles[2] = -fmod(-data_3.Pos, 6.28) / 6.33;
-            else
-                joint_angles[2] = fmod(data_3.Pos, 6.28) / 6.33;
+            MotorCmd cmd;
+            MotorData data;
+            cmd.motorType = MotorType::GO_M8010_6;
+            cmd.id = motor_id;
+            cmd.mode = 1;
+            cmd.T = 0.0;
+            cmd.W = velocities[counter][motor_id] * 6.33;
+            cmd.Pos = (positions[counter][motor_id] - zero_pos[motor_id]) * 6.33;
+            cmd.K_P = 0.05;
+            cmd.K_W = 0.0;
+            serial.sendRecv(&cmd, &data);
+            if (data.correct)
+            {
+                if (data.Pos - zero_pos[motor_id] < 0)
+                    joint_angles[motor_id] = -fmod(-data.Pos+zero_pos[motor_id], 6.28) / 6.33;
+                else
+                    joint_angles[motor_id] = fmod(data.Pos-zero_pos[motor_id], 6.28) / 6.33;
+            }
         }
 
         sensor_msgs::JointState msg;
