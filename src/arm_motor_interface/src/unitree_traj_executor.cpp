@@ -19,7 +19,7 @@ class Unitree_Traj_executor
     std::vector<std::vector<double>> velocities;
     std::vector<std::vector<double>> accelerations;
     std::vector<double> time_from_start;
-    SerialPort serial;
+    SerialPort serial = SerialPort("/dev/ttyUSB1");
     double zero_pos[3] = {0, 0, 0};
 
     public:
@@ -39,15 +39,13 @@ class Unitree_Traj_executor
 
     void Untree_init()
     {
-        serial = SerialPort("/dev/ttyUSB0");
-
         for (int motor_id = 0; motor_id < 3; motor_id++)
         {
             MotorCmd cmd;
             MotorData data;
             cmd.motorType = MotorType::GO_M8010_6;
             cmd.id = motor_id;
-            cmd.mode = 1;
+            cmd.mode = 0;
             cmd.T = 0.0;
             cmd.W = 0.0;
             cmd.Pos = 0.0;
@@ -59,6 +57,7 @@ class Unitree_Traj_executor
             else
                 motor_id--;
         }
+        ros::Duration(0.5).sleep();
     }
 
     void traj_goal_callback(const control_msgs::FollowJointTrajectoryActionGoal::ConstPtr &msg) 
@@ -93,16 +92,16 @@ class Unitree_Traj_executor
             cmd.mode = 1;
             cmd.T = 0.0;
             cmd.W = velocities[counter][motor_id] * 6.33;
-            cmd.Pos = (positions[counter][motor_id] - zero_pos[motor_id]) * 6.33;
-            cmd.K_P = 0.05;
+            cmd.Pos = positions[counter][motor_id] * 6.33 + zero_pos[motor_id];
+            cmd.K_P = 0.1;
             cmd.K_W = 0.0;
             serial.sendRecv(&cmd, &data);
             if (data.correct)
             {
                 if (data.Pos - zero_pos[motor_id] < 0)
-                    joint_angles[motor_id] = -fmod(-data.Pos+zero_pos[motor_id], 6.28) / 6.33;
+                    joint_angles[motor_id] = -fmod(-(data.Pos-zero_pos[motor_id])/6.33, 6.28);
                 else
-                    joint_angles[motor_id] = fmod(data.Pos-zero_pos[motor_id], 6.28) / 6.33;
+                    joint_angles[motor_id] = fmod((data.Pos-zero_pos[motor_id])/6.33, 6.28);
             }
         }
 
