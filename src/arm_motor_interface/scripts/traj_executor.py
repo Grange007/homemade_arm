@@ -37,11 +37,19 @@ class Traj_executor:
     def CyberGear_init(self):
         self.cybergear_motor_controller = CyberGear.MotorController('/dev/ttyUSB0', 921600, timeout=1)
         # joint 4
+        set_zero_msg_1 = CyberGear.SetZeroMsg()
+        set_zero_msg_1.can_id = 1
+        set_zero_msg_1.host_id = 253
+        self.cybergear_motor_controller.setZero(set_zero_msg_1)
         enable_msg_1 = CyberGear.EnableMsg()
         enable_msg_1.can_id  = 1
         enable_msg_1.host_id = 253
         self.cybergear_motor_controller.enable(enable_msg_1)
         # joint 5
+        set_zero_msg_2 = CyberGear.SetZeroMsg()
+        set_zero_msg_2.can_id = 2
+        set_zero_msg_2.host_id = 253
+        self.cybergear_motor_controller.setZero(set_zero_msg_2)
         enable_msg_2 = CyberGear.EnableMsg()
         enable_msg_2.can_id  = 2
         enable_msg_2.host_id = 253

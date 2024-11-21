@@ -169,7 +169,7 @@ class SetZeroMsg():
         length  = 0x08
 
         data = [type << 3, host_id >> 5, host_id << 3 & 0xff | can_id >> 8, can_id & 0xff,
-                length, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+                length, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
         msg = "41 54 " + ' '.join(f'{byte:02x}' for byte in data) + " 0d 0a"
         logging.info("setZeroMsg: " + msg)
         return msg
