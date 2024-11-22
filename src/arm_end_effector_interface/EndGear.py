@@ -7,17 +7,21 @@ logging.basicConfig(filename='EndGear.log', filemode='w', level=logging.DEBUG, f
 #3.释放扭力
 #4.读取和设置ID
 class EndGear:
-    def __init__(self, port, baudrate):
-        self.ser = serial.Serial()
-        self.ser.port = port
-        self.ser.baudrate = baudrate
-        self.id = 0  # 初始化 id 变量
+    def __init__(self,id,ser):
+        self.ser = ser
+        self.id = id  # 初始化 id 变量
+        logging.info(f"已初始化 EndGear 类，ID：{self.id}")
+       
+    def open_serial(self):
+        if self.ser.is_open:
+            logging.info("串口已经是打开状态")
+            return
         try:
             self.ser.open()
             logging.info("串口已打开")
         except Exception as e:
             logging.error(f"未成功打开：{e}")
-            
+
     def readdata(self):	
         data = ""
         while True:
@@ -54,7 +58,8 @@ class EndGear:
         logging.info("已发送指令：" + command_to_send)
         data = self.readdata()
         logging.info("已接收数据：" + data)
-        self.id = int(data[1:3])  # 更新 id 变量
+        logging.info(f"当前 ID：{data[1:4]}")
+        self.id = int(data[1:4])  # 更新 id 变量
         return self.id
 
     def set_id(self, id):
