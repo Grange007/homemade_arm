@@ -89,7 +89,7 @@ class Traj_executor:
         control_mode_msg_1.torque   = 0.0
         control_mode_msg_1.position = self.positions[counter][3]
         control_mode_msg_1.velocity = self.velocities[counter][3]
-        control_mode_msg_1.Kp       = 1.0
+        control_mode_msg_1.Kp       = 20.0
         control_mode_msg_1.Ki       = 0.1
         feedback_msg_1 = self.cybergear_motor_controller.controlMode(control_mode_msg_1)
         if feedback_msg_1 is not None:
@@ -103,7 +103,7 @@ class Traj_executor:
         control_mode_msg_2.torque   = 0.0
         control_mode_msg_2.position = self.positions[counter][4]
         control_mode_msg_2.velocity = self.velocities[counter][4]
-        control_mode_msg_2.Kp       = 1.0
+        control_mode_msg_2.Kp       = 20.0
         control_mode_msg_2.Ki       = 0.1
         feedback_msg_2 = self.cybergear_motor_controller.controlMode(control_mode_msg_2)
         if feedback_msg_2 is not None:

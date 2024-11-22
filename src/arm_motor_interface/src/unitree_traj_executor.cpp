@@ -93,8 +93,8 @@ class Unitree_Traj_executor
             cmd.T = 0.0;
             cmd.W = velocities[counter][motor_id] * 6.33;
             cmd.Pos = positions[counter][motor_id] * 6.33 + zero_pos[motor_id];
-            cmd.K_P = 0.1;
-            cmd.K_W = 0.0;
+            cmd.K_P = 3.5;
+            cmd.K_W = 0.1;
             serial.sendRecv(&cmd, &data);
             if (data.correct)
             {
@@ -102,6 +102,10 @@ class Unitree_Traj_executor
                     joint_angles[motor_id] = -fmod(-(data.Pos-zero_pos[motor_id])/6.33, 6.28);
                 else
                     joint_angles[motor_id] = fmod((data.Pos-zero_pos[motor_id])/6.33, 6.28);
+            }
+            else
+            {
+                printf("error");
             }
         }
 
