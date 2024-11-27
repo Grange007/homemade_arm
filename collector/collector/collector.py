@@ -126,7 +126,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--cfg', '-c', 
-        default = os.path.join('configs', 'flexiv_teleop.yaml'), 
+        default = os.path.join('configs', 'ave_arm.json'), 
         help = 'path to the configuration file', 
         type = str
     )
@@ -134,14 +134,12 @@ if __name__ == '__main__':
     parser.add_argument('--scene', '-s', default = 0, help = 'scene id', type = int)
     parser.add_argument('--user', '-u', default = 0, help = 'user id', type = int)
     args = parser.parse_args()
+    print(args.cfg)
     if not os.path.exists(args.cfg):
         raise AttributeError('Please provide the configuration file {}.'.format(args.cfg))
     with open(args.cfg, 'r') as f:
         cfgs = edict(json.load(f))
-    if cfgs.mode == 'exoskeleton':
-        subpath = os.path.join('task{}_itw'.format(args.task), 'scene{}'.format(args.scene))
-    else:
-        subpath = os.path.join('task{}'.format(args.task), 'scene{}'.format(args.scene))
+    subpath = os.path.join('task{}'.format(args.task), 'scene{}'.format(args.scene))
     collector = Collector(cfgs, subpath, user = args.user)
 
     has_stop = False

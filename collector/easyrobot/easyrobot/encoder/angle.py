@@ -4,7 +4,6 @@ Angle Encoder Interface.
 Author: Hongjie Fang.
 '''
 
-import copy
 import time
 import serial
 import numpy as np
