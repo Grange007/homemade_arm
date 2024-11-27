@@ -25,5 +25,5 @@ camera = RealSenseRGBDCamera(
 
 while True:
     [rgb, depth] = camera.get_info()
-    print(depth.dtype)
+    print(rgb.shape, depth.shape)
 
