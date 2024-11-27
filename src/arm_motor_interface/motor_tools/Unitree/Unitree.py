@@ -5,6 +5,7 @@ import struct
 
 logging.basicConfig(filename='Unitree.log', filemode='w', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
+
 def crc16(hex_num):
     crc = '0xffff'
     crc16 = '0xA001'
@@ -28,14 +29,14 @@ def crc16(hex_num):
 
 class ControlMsg():
 
-    def __init__(self, id=0, status=0, torque=0.0, velocity=0.0, position=0.0, Kp=0.0, Kd=0.0):
+    def __init__(self, id=0, status=0, torque=0.0, velocity=0.0, position=0.0, Kp=0.0, Kw=0.0):
         self.id       = id
         self.status   = status
         self.torque   = min(max(torque, -127.99), 127.99)
         self.velocity = min(max(velocity, -804.0), 804.0)
         self.position = min(max(position, -411774), 411774)
         self.Kp       = min(max(Kp, 0.0), 25.599)
-        self.Kd       = min(max(Kd, 0.0), 25.599)
+        self.Kw       = min(max(Kw, 0.0), 25.599)
 
     def encode(self):
         id       = self.id
@@ -44,14 +45,14 @@ class ControlMsg():
         velocity = int(self.velocity / (2*math.pi) * 256) + 0x8000
         position = int(self.position / (2*math.pi) * 32768) + 0x80000000
         Kp       = int(self.Kp * 1280)
-        Kd       = int(self.Kd * 1280)
+        Kw       = int(self.Kw * 1280)
 
         data = [id << 4 | status << 1,
                 torque >> 8 & 0xff, torque & 0xff,
                 velocity >> 8 & 0xff, velocity & 0xff,
                 position >> 24 & 0xff, position >> 16 & 0xff, position >> 8 & 0xff, position & 0xff,
                 Kp >> 8 & 0xff, Kp & 0xff,
-                Kd >> 8 & 0xff, Kd & 0xff]
+                Kw >> 8 & 0xff, Kw & 0xff]
         msg = "fd ee " + ' '.join(f'{byte:02x}' for byte in data)
         crc = crc16(msg)
         msg += " " + crc[2:] + " " + crc[0:2]
