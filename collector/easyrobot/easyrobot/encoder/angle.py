@@ -4,51 +4,13 @@ Angle Encoder Interface.
 Author: Hongjie Fang.
 '''
 
-import copy
 import time
 import serial
 import numpy as np
 
 from easyrobot.encoder.base import EncoderBase
-
-
-def hex2dex(e_hex):
-    return int(e_hex, 16)
-
-def hex2bin(e_hex):
-    return bin(int(e_hex, 16))
-
-def dex2bin(e_dex):
-    return bin(e_dex)
-
-def crc16(hex_num):
-    """
-    CRC16 verification
-    :param hex_num:
-    :return:
-    """
-    crc = '0xffff'
-    crc16 = '0xA001'
-    test = hex_num.split(' ')
-
-    crc = hex2dex(crc)  
-    crc16 = hex2dex(crc16) 
-    for i in test:
-        temp = '0x' + i
-        temp = hex2dex(temp) 
-        crc ^= temp  
-        for i in range(8):
-            if dex2bin(crc)[-1] == '0':
-                crc >>= 1
-            elif dex2bin(crc)[-1] == '1':
-                crc >>= 1
-                crc ^= crc16
-
-    crc = hex(crc)
-    crc_H = crc[2:4]
-    crc_L = crc[-2:]
-
-    return crc, crc_H, crc_L
+import Unitree
+import CyberGear
 
 
 class AngleEncoder(EncoderBase):
@@ -57,41 +19,75 @@ class AngleEncoder(EncoderBase):
     """
     def __init__(
         self,
-        ids,
-        port,
-        baudrate = 115200,
+        Unitree_ids,
+        Cybergear_ids,
         sleep_gap = 0.002,
         logger_name: str = "Angle Encoder",
-        shm_name: str = None, 
+        shm_name: str = None,
         streaming_freq: int = 30,
         **kwargs 
     ):
         """
         Args:
-        - ids: list of int, e.g., [1, 2, ..., 8], the id(s) of the desired encoder(s);
-        - port, baudrate, (**kwargs): the args of the serial agents;
+        - Unitree_ids: list of int, e.g., [1, 2, ..., 8], the id(s) of the Unitree encoder(s);
+        - CyberGear_ids: list of int, e.g., [1, 2, ..., 8], the id(s) of the CyberGear encoder(s);
         - sleep_gap: float, optional, default: 0.002, the sleep gap between adjacent write options;
         - logger_name: str, optional, default: "AngleEncoder", the name of the logger;
         - shm_name: str, optional, default: None, the shared memory name of the angle encoder data, None means no shared memory object;
         - streaming_freq: int, optional, default: 30, the streaming frequency.
         """
-        self.ids = ids
-        self.ids_num = len(ids)
-        self.ids_map = {}
-        for i, id in enumerate(ids):
-            self.ids_map[id] = i
+        self.Unitree_ids = Unitree_ids
+        self.Unitree_ids_map = {}
+        for i, id in enumerate(Unitree_ids):
+            self.Unitree_ids_map[id] = i
+
+        self.Cybergear_ids = CyberGear_ids
+        self.Cybergear_ids_map = {}
+        for i, id in enumerate(Cybergear_ids):
+            self.Cybergear_ids_map[id] = i + len(self.Unitree_ids)
+
+        self.ids_num = len(self.Unitree_ids) + len(self.Cybergear_ids)
+
         self.sleep_gap = sleep_gap
-        self.ser = serial.Serial(port, baudrate = baudrate, **kwargs)
-        if not self.ser.is_open:
-            raise RuntimeError('Fail to open the serial port, please check your settings again.')
-        self.ser.flushInput()
-        self.ser.flushOutput()
+
+        self.Unitree_init()
+        self.Cybergear_init()
+
         self.last_angle = self.get_angles(ignore_error = False)
         super(AngleEncoder, self).__init__(
-            logger_name = logger_name, 
-            shm_name = shm_name, 
+            logger_name = logger_name,
+            shm_name = shm_name,
             streaming_freq = streaming_freq
         )
+
+    def Unitree_init(self):
+        self.Unitree_controller = Unitree.MotorController('/dev/ttyUSB0', 921600, 1)
+        # self.zero_pos = {}
+        # for id in self.Unitree_ids:
+        #     while True:
+        #         control_msg = Unitree.ControlMsg()
+        #         control_msg.id       = id
+        #         control_msg.status   = 1
+        #         control_msg.torque   = 0.0
+        #         control_msg.position = 0.0
+        #         control_msg.velocity = 0.0
+        #         control_msg.Kp       = 0.0
+        #         control_msg.Kw       = 0.0
+        #         feedback_msg = self.Unitree_ontroller.control(control_msg)
+        #         if feedback_msg != None:
+        #             self.zero_pos[id] = feedback_msg.position
+        #             break
+
+    def Cybergear_init(self):
+        self.Cybergear_controller = Cybergear.MotorController('/dev/ttyUSB1', 921600, 1)
+        # for id in self.Cybergear_ids:
+        #     while True:
+        #         set_zero_msg = CyberGear.SetZeroMsg()
+        #         set_zero_msg.can_id  = id
+        #         set_zero_msg.host_id = 253
+        #         feedback_msg = self.Cybergear_controller.setZero(set_zero_msg)
+        #         if feedback_msg != None:
+        #             break
 
     def get_angles(self, ignore_error = False, **kwargs):
         """
@@ -103,79 +99,43 @@ class AngleEncoder(EncoderBase):
         Returns:
         - ret: np.array, the encoder angle results corresponding to the ids array.
         """
-        self.ser.flushInput()
-        ids = copy.deepcopy(self.ids)
-        for i in ids:
-            sendbytes = str(i).zfill(2) + " 03 00 41 00 01"
-            crc, crc_H, crc_L = crc16(sendbytes)
-            sendbytes = sendbytes + ' ' + crc_L + ' ' + crc_H
-            sendbytes = bytes.fromhex(sendbytes)
-            self.ser.write(sendbytes) 
-            time.sleep(self.sleep_gap)
-        
-        re = self.ser.read(len(ids) * 7)
-        if self.ser.inWaiting() > 0:
-            se = self.ser.read_all()
-            re += se
-        
-        count = 0
-        remains = ids.copy()
         if ignore_error:
             ret = np.copy(self.last_angle).astype(np.float32)
         else:
             ret = np.zeros(self.ids_num).astype(np.float32)
-        b = 0
-        while b <= len(re) - 7:
-            if re[b + 1] == 3 and re[b + 2] == 2 and re[b] in remains:
-                angle = 360 * (re[b + 3] * 256 + re[b + 4]) / 4096
-                ret[self.ids_map[re[b]]] = angle
-                count += 1
-                remains.remove(re[b])
-                b += 7
+
+        for id in self.Unitree_ids:
+            control_msg = Unitree.ControlMsg()
+            control_msg.id       = id
+            control_msg.status   = 1
+            control_msg.torque   = 0.0
+            control_msg.position = 0.0
+            control_msg.velocity = 0.0
+            control_msg.Kp       = 0.0
+            control_msg.Kw       = 0.0
+            feedback_msg = motor_controller.control(control_msg)
+            if feedback_msg != None:
+                ret[self.Unitree_ids_map[id]] = (feedback_msg.position / 6.33)
             else:
-                b += 1
+                ret[self.Unitree_ids_map[id]] = 0.0
+
+        for id in self.Cybergear_ids:
+            control_mode_msg = CyberGear.ControlModeMsg()
+            control_mode_msg.can_id   = id
+            control_mode_msg.torque   = 0.0
+            control_mode_msg.position = 0.0
+            control_mode_msg.velocity = 0.0
+            control_mode_msg.Kp       = 0.0
+            control_mode_msg.Ki       = 0.0
+            feedback_msg = self.Cybergear_controller.controlMode(control_mode_msg)
+            if feedback_msg is not None:
+                ret[self.Cybergear_ids_map[id]] = feedback_msg.position
+            else:
+                ret[self.Cybergear_ids_map[id]] = 0.0
+
         if not ignore_error and count != len(ids):
             raise RuntimeError('Failure to receive all encoders, errors occurred in ID {}.'.format(remains))
         self.last_angle = ret
-        return ret
-    
-    def get_circles(self, **kwargs):
-        """
-        Get the circles of the encoder.
-
-        Returns:
-        - ret: np.array, the encoder circle results corresponding to the ids array.
-        """
-        self.ser.flushInput()
-        ids = copy.deepcopy(self.ids)
-        for i in ids:
-            sendbytes = str(i).zfill(2) + " 03 00 44 00 01"
-            crc, crc_H, crc_L = crc16(sendbytes)
-            sendbytes = sendbytes + ' ' + crc_L + ' ' + crc_H
-            sendbytes = bytes.fromhex(sendbytes)
-            self.ser.write(sendbytes) 
-            time.sleep(self.sleep_gap)
-        
-        re = self.ser.read(len(ids) * 7)
-        if self.ser.inWaiting() > 0:
-            se = self.ser.read_all()
-            re += se
-        
-        count = 0
-        remains = ids.copy()
-        ret = np.zeros(self.ids_num).astype(np.float32)
-        b = 0
-        while b <= len(re) - 7:
-            if re[b + 1] == 3 and re[b + 2] == 2 and re[b] in remains:
-                angle = re[b + 3] * 256 + re[b + 4]
-                ret[self.ids_map[re[b]]] = angle
-                count += 1
-                remains.remove(re[b])
-                b += 7
-            else:
-                b += 1
-        if count != len(ids):
-            raise RuntimeError('Failure to receive all encoders, errors occurred in ID {}.'.format(remains))
         return ret
 
     def get_info(self, ignore_error = False, **kwargs):
