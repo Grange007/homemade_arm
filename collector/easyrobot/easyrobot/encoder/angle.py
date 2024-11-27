@@ -9,46 +9,8 @@ import serial
 import numpy as np
 
 from easyrobot.encoder.base import EncoderBase
+import Unitree
 import CyberGear
-
-
-def hex2dex(e_hex):
-    return int(e_hex, 16)
-
-def hex2bin(e_hex):
-    return bin(int(e_hex, 16))
-
-def dex2bin(e_dex):
-    return bin(e_dex)
-
-def crc16(hex_num):
-    """
-    CRC16 verification
-    :param hex_num:
-    :return:
-    """
-    crc = '0xffff'
-    crc16 = '0xA001'
-    test = hex_num.split(' ')
-
-    crc = hex2dex(crc)  
-    crc16 = hex2dex(crc16) 
-    for i in test:
-        temp = '0x' + i
-        temp = hex2dex(temp) 
-        crc ^= temp  
-        for i in range(8):
-            if dex2bin(crc)[-1] == '0':
-                crc >>= 1
-            elif dex2bin(crc)[-1] == '1':
-                crc >>= 1
-                crc ^= crc16
-
-    crc = hex(crc)
-    crc_H = crc[2:4]
-    crc_L = crc[-2:]
-
-    return crc, crc_H, crc_L
 
 
 class AngleEncoder(EncoderBase):
@@ -88,8 +50,8 @@ class AngleEncoder(EncoderBase):
 
         self.sleep_gap = sleep_gap
 
-        self.Unitree_controller = Unitree.MotorController('/dev/ttyUSB0', 921600, 1)
-        self.Cybergear_controller = Cybergear.MotorController('/dev/ttyUSB1', 921600, 1)
+        self.Unitree_init()
+        self.Cybergear_init()
 
         self.last_angle = self.get_angles(ignore_error = False)
         super(AngleEncoder, self).__init__(
@@ -97,6 +59,35 @@ class AngleEncoder(EncoderBase):
             shm_name = shm_name,
             streaming_freq = streaming_freq
         )
+
+    def Unitree_init(self):
+        self.Unitree_controller = Unitree.MotorController('/dev/ttyUSB0', 921600, 1)
+        # self.zero_pos = {}
+        # for id in self.Unitree_ids:
+        #     while True:
+        #         control_msg = Unitree.ControlMsg()
+        #         control_msg.id       = id
+        #         control_msg.status   = 1
+        #         control_msg.torque   = 0.0
+        #         control_msg.position = 0.0
+        #         control_msg.velocity = 0.0
+        #         control_msg.Kp       = 0.0
+        #         control_msg.Kw       = 0.0
+        #         feedback_msg = self.Unitree_ontroller.control(control_msg)
+        #         if feedback_msg != None:
+        #             self.zero_pos[id] = feedback_msg.position
+        #             break
+
+    def Cybergear_init(self):
+        self.Cybergear_controller = Cybergear.MotorController('/dev/ttyUSB1', 921600, 1)
+        # for id in self.Cybergear_ids:
+        #     while True:
+        #         set_zero_msg = CyberGear.SetZeroMsg()
+        #         set_zero_msg.can_id  = id
+        #         set_zero_msg.host_id = 253
+        #         feedback_msg = self.Cybergear_controller.setZero(set_zero_msg)
+        #         if feedback_msg != None:
+        #             break
 
     def get_angles(self, ignore_error = False, **kwargs):
         """
@@ -114,8 +105,19 @@ class AngleEncoder(EncoderBase):
             ret = np.zeros(self.ids_num).astype(np.float32)
 
         for id in self.Unitree_ids:
-
-            time.sleep(self.sleep_gap)
+            control_msg = Unitree.ControlMsg()
+            control_msg.id       = id
+            control_msg.status   = 1
+            control_msg.torque   = 0.0
+            control_msg.position = 0.0
+            control_msg.velocity = 0.0
+            control_msg.Kp       = 0.0
+            control_msg.Kw       = 0.0
+            feedback_msg = motor_controller.control(control_msg)
+            if feedback_msg != None:
+                ret[self.Unitree_ids_map[id]] = (feedback_msg.position / 6.33)
+            else:
+                ret[self.Unitree_ids_map[id]] = 0.0
 
         for id in self.Cybergear_ids:
             control_mode_msg = CyberGear.ControlModeMsg()
@@ -127,10 +129,7 @@ class AngleEncoder(EncoderBase):
             control_mode_msg.Ki       = 0.0
             feedback_msg = self.Cybergear_controller.controlMode(control_mode_msg)
             if feedback_msg is not None:
-                if feedback_msg.position < 0:
-                    ret[self.Cybergear_ids_map[id]] = -((-feedback_msg.position) % 6.28)
-                else:
-                    ret[self.Cybergear_ids_map[id]] = feedback_msg_1.position % 6.28
+                ret[self.Cybergear_ids_map[id]] = feedback_msg.position
             else:
                 ret[self.Cybergear_ids_map[id]] = 0.0
 
