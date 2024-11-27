@@ -26,13 +26,21 @@
     }, 
     "data_path": "/home/grange/Program/act_arm/collector/data",
     "shm_data": {
+        "encoder_left": {
+            "shape": [8],
+            "type": "float"
+        },
+        "encoder_right": {
+            "shape": [8],
+            "type": "float"
+        },
         "image": {
-            "shape": [480, 640, 3],
+            "shape": [720, 1280, 3],
             "type": "uint8"
         },
         "depth": {
-            "shape": [480, 640],
-            "type": "float32"
+            "shape": [720, 1280],
+            "type": "float"
         }
     },
     "cameras": [
