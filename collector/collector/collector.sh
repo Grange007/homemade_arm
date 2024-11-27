@@ -1,7 +1,9 @@
-source [CONDA ACTIVATE SCRIPT]
-conda activate [CONDA ENV]
+#!/bin/bash
+
+source ~/.bashrc
+conda activate airexo
 export DISPLAY=:1
-cd [PATH TO THE COLLECTOR]
+cd /home/grange/Program/act_arm/collector/
 cfg=$1
 tid=$2
 sid=$3
