@@ -1,29 +1,30 @@
 {
     "name": "Collector",
-    "encoder_Unitree": {
+    "Unitree_encoder": {
         "ids": [0, 1, 2],
         "port": "/dev/ttyUSB0",
         "baudrate": 4000000,
-        "logger_name": "UnitreeEncoder",
+        "logger_name": "Unitree-Encoder",
         "shm_name": "Unitree_encoder",
         "streaming_freq": 30
     }, 
-    "encoder_Cybergear": {
+    "Cybergear_encoder": {
         "ids": [1, 2],
         "port": "/dev/ttyUSB1",
         "baudrate": 921600,
-        "logger_name": "CybergearEncoder",
+        "logger_name": "Cybergear-Encoder",
         "shm_name": "Cybergear_encoder",
         "streaming_freq": 30
     }, 
-    "encoder_servo": {
+    "servo_encoder": {
         "ids": [1, 2, 3, 4, 5, 6, 7, 8],
         "port": "/dev/ttyUSB2",
         "baudrate": 115200,
-        "logger_name": "AngleEncoder-right",
-        "shm_name": "encoder_right",
+        "logger_name": "Servo-Encoder",
+        "shm_name": "servo_encoder",
         "streaming_freq": 30
     }, 
+
     "data_path": "/home/grange/Program/act_arm/collector/data",
     "shm_data": {
         "image": {
@@ -40,6 +41,18 @@
         },
         "depth_orbbec": {
             "shape": [720, 1280],
+            "type": "float32"
+        },
+        "Unitree_encoder": {
+            "shape": [3],
+            "type": "float32"
+        },
+        "Cybergear_encoder": {
+            "shape": [2],
+            "type": "float32"
+        },
+        "servo_encoder": {
+            "shape": [2],
             "type": "float32"
         }
     },
