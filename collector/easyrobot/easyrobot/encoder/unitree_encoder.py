@@ -18,7 +18,9 @@ class UnitreeEncoder(EncoderBase):
     """
     def __init__(
         self,
-        Unitree_ids,
+        ids,
+        port = '/dev/ttyUSB0',
+        baudrate = 4000000,
         sleep_gap = 0.002,
         logger_name: str = "UnitreeEncoder",
         shm_name: str = None,
@@ -27,31 +29,26 @@ class UnitreeEncoder(EncoderBase):
     ):
         """
         Args:
-        - Unitree_ids: list of int, e.g., [1, 2, ..., 8], the id(s) of the Unitree encoder(s);
+        - ids: list of int, e.g., [1, 2, ..., 8], the id(s) of the Unitree encoder(s);
+        - port, baudrate, (**kwargs): the args of the serial agents;
         - sleep_gap: float, optional, default: 0.002, the sleep gap between adjacent write options;
         - logger_name: str, optional, default: "UnitreeEncoder", the name of the logger;
         - shm_name: str, optional, default: None, the shared memory name of the angle encoder data, None means no shared memory object;
         - streaming_freq: int, optional, default: 30, the streaming frequency.
         """
-        self.Unitree_ids = Unitree_ids
-        self.Unitree_ids_map = {}
-        for i, id in enumerate(Unitree_ids):
-            self.Unitree_ids_map[id] = i
-        self.Unitree_init()
-
-        self.ids_num = len(self.Unitree_ids)
-
+        self.ids = ids
+        self.ids_map = {}
+        for i, id in enumerate(ids):
+            self.ids_map[id] = i
+        self.Unitree_controller = Unitree.MotorController(port, baudrate, 1)
+        self.ids_num = len(self.ids)
         self.sleep_gap = sleep_gap
-
-        self.init_angle = self.get_angles(ignore_error = False)
+        self.init_angles = self.get_angles(ignore_error = False)
         super(UnitreeEncoder, self).__init__(
             logger_name = logger_name,
             shm_name = shm_name,
             streaming_freq = streaming_freq
         )
-
-    def Unitree_init(self):
-        self.Unitree_controller = Unitree.MotorController('/dev/ttyUSB0', 4000000, 1)
 
     def get_angles(self, ignore_error = False, **kwargs):
         """
@@ -64,11 +61,11 @@ class UnitreeEncoder(EncoderBase):
         - ret: np.array, the encoder angle results corresponding to the ids array.
         """
         if ignore_error:
-            ret = np.copy(self.last_angle).astype(np.float32)
+            ret = np.copy(self.last_angles).astype(np.float32)
         else:
             ret = np.zeros(self.ids_num).astype(np.float32)
 
-        for id in self.Unitree_ids:
+        for id in self.ids:
             control_msg = Unitree.ControlMsg()
             control_msg.id       = id
             control_msg.status   = 1
@@ -79,13 +76,12 @@ class UnitreeEncoder(EncoderBase):
             control_msg.Kw       = 0.0
             feedback_msg = self.Unitree_controller.control(control_msg)
             if feedback_msg != None:
-                ret[self.Unitree_ids_map[id]] = (feedback_msg.position / 6.33)
+                ret[self.ids_map[id]] = (feedback_msg.position / 6.33)
             else:
-                ret[self.Unitree_ids_map[id]] = 0.0
+                ret[self.ids_map[id]] = 0.0
+            time.sleep(self.sleep_gap)
 
-        # if not ignore_error and count != len(ids):
-        #     raise RuntimeError('Failure to receive all encoders, errors occurred in ID {}.'.format(remains))
-        self.last_angle = ret
+        self.last_angles = ret
         return ret
 
     def get_info(self, ignore_error = False, **kwargs):
@@ -98,10 +94,9 @@ class UnitreeEncoder(EncoderBase):
         Returns:
         - ret: np.array, the encoder results corresponding to the ids array.
         """
-        return self.get_angles(ignore_error = ignore_error, **kwargs)
-
+        return self.get_angles(ignore_error = ignore_error, **kwargs) - self.init_angles
 
     def fetch_info(self):
         if not self.is_streaming:
             self.get_info(ignore_error = True)
-        return self.last_angle
+        return self.last_angles - self.init_angles

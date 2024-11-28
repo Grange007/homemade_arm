@@ -89,7 +89,6 @@ class FeedbackMsg():
         self.msg = msg
 
     def decode(self):
-        # print(' '.join(f'{byte:02x}' for byte in self.msg))
         if len(self.msg) != 16:
             logging.error("Invalid feedbackMsg.")
             return False
