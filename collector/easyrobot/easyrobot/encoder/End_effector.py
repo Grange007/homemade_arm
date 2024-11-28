@@ -143,6 +143,8 @@ class EndEffectorEncoder(EncoderBase):
         Returns:
         - ret: np.array, the encoder results corresponding to the ids array.
         """
+        for i in self.ids:
+            self.release_F(i)
         return self.get_angles(ignore_error = ignore_error, **kwargs)
 
 
