@@ -1,7 +1,7 @@
 ﻿import numpy as np
 
 # 加载 .npy 文件
-file_path = './data/task0/scene0/1732721185329.npy'
+file_path = './data/task0/scene1/1732768433407.npy'
 data = np.load(file_path, allow_pickle=True)
 
 # 打印数据
