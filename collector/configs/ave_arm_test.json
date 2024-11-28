@@ -33,6 +33,14 @@
         "depth": {
             "shape": [480, 640],
             "type": "float32"
+        },
+        "image_orbbec": {
+            "shape": [720, 1280, 3],
+            "type": "uint8"
+        },
+        "depth_orbbec": {
+            "shape": [720, 1280],
+            "type": "float32"
         }
     },
     "cameras": [
@@ -45,6 +53,16 @@
             "logger_name": "RealSense Camera",
             "shm_name_rgb": "image",
             "shm_name_depth": "depth",
+            "streaming_freq": 30
+        },
+        {
+            "name": "orbbec",
+            "frame_rate": 15,
+            "resolution": [1280, 720],
+            "align_mode": "HW",
+            "logger_name": "Orbbec Camera",
+            "shm_name_rgb": "image_orbbec",
+            "shm_name_depth": "depth_orbbec",
             "streaming_freq": 30
         }
     ]
