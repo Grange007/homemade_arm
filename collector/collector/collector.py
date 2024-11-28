@@ -12,8 +12,8 @@ from easyrobot.utils.shared_memory import SharedMemoryManager
 
 
 def to_type(s):
-    if s == "float":
-        return np.float64
+    if s == "float32":
+        return np.float32
     elif s == "int":
         return np.int64
     elif s == "uint8":
@@ -49,6 +49,9 @@ class Collector(object):
         self.shm_list = cfgs.shm_data.keys()
         self.shm_managers = []
         for shm_name in self.shm_list:
+            print(shm_name)
+            print(cfgs.shm_data[shm_name]["shape"])
+            print(to_type(cfgs.shm_data[shm_name]["type"]))
             self.shm_managers.append(
                 SharedMemoryManager(
                     shm_name,

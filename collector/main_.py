@@ -8,7 +8,7 @@ from easyrobot.encoder.angle import AngleEncoder
 
 
 if __name__ == '__main__':
-    # os.system("kill -9 `ps -ef | grep collector | grep -v grep | awk '{print $2}'`")
+    os.system("kill -9 `ps -ef | grep collector | grep -v grep | awk '{print $2}'`")
     os.system('rm -f /dev/shm/*')
     os.system('udevadm trigger')
 

@@ -2,6 +2,7 @@
 Angle Encoder Interface.
 
 Author: Hongjie Fang.
+This is an example of the angle encoder interface. you can think.
 '''
 
 import time

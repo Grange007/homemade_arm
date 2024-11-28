@@ -20,7 +20,7 @@ camera = RealSenseRGBDCamera(
     resolution=(640, 480),
     enable_emitter=False,
     align=False,
-    streaming_freq=10
+    # streaming_freq=50
 )
 
 while True:
