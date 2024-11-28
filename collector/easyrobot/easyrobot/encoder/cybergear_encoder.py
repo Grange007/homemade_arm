@@ -10,7 +10,7 @@ import serial
 import numpy as np
 
 from easyrobot.encoder.base import EncoderBase
-import CyberGear
+import easyrobot.encoder.Cybergear as Cybergear
 
 
 class CybergearEncoder(EncoderBase):

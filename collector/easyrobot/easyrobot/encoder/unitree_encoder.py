@@ -9,7 +9,7 @@ import serial
 import numpy as np
 
 from easyrobot.encoder.base import EncoderBase
-import Unitree
+import easyrobot.encoder.Unitree as Unitree
 
 
 class UnitreeEncoder(EncoderBase):
@@ -77,7 +77,7 @@ class UnitreeEncoder(EncoderBase):
             control_msg.velocity = 0.0
             control_msg.Kp       = 0.0
             control_msg.Kw       = 0.0
-            feedback_msg = motor_controller.control(control_msg)
+            feedback_msg = self.Unitree_controller.control(control_msg)
             if feedback_msg != None:
                 ret[self.Unitree_ids_map[id]] = (feedback_msg.position / 6.33)
             else:
