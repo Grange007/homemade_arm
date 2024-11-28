@@ -159,6 +159,8 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-*.npy
+# *.npy
 collector/data/*
+!collector/data/servo_example
+!collector/data/motor_example
 OrbbecSDK.log.txt
