@@ -71,11 +71,11 @@ class ControlMsg():
         Kw       = int(self.Kw * 1280)
 
         data = [status << 4 | id,
-                torque >> 8 & 0xff, torque & 0xff,
-                velocity >> 8 & 0xff, velocity & 0xff,
-                position >> 24 & 0xff, position >> 16 & 0xff, position >> 8 & 0xff, position & 0xff,
-                Kp >> 8 & 0xff, Kp & 0xff,
-                Kw >> 8 & 0xff, Kw & 0xff]
+                torque & 0xff, torque >> 8 & 0xff,
+                velocity & 0xff, velocity >> 8 & 0xff,
+                position & 0xff, position >> 8 & 0xff, position >> 16 & 0xff, position >> 24 & 0xff,
+                Kp & 0xff, Kp >> 8 & 0xff,
+                Kw & 0xff, Kw >> 8 & 0xff]
         msg = "fe ee " + ' '.join(f'{byte:02x}' for byte in data)
         crc = hex(crc_ccitt(0x0000, bytes.fromhex(msg.replace(" ", ""))))
         msg += " " + crc[-2:] + " " + crc[2:4]
@@ -89,18 +89,19 @@ class FeedbackMsg():
         self.msg = msg
 
     def decode(self):
+        print(' '.join(f'{byte:02x}' for byte in self.msg))
         if len(self.msg) != 16:
             logging.error("Invalid feedbackMsg.")
             return False
-        
+
         if self.msg[0] != 0xfd or self.msg[1] != 0xee:
             logging.error("Invalid header.")
             return False
-        
-        id = self.msg[2] >> 4
+
+        id = self.msg[2] & 0x0f
         self.id = id
 
-        status = self.msg[2] >> 1 & 0x07
+        status = self.msg[2] >> 4 & 0x07
         if status == 0:
             self.status = "Lock"
         elif status == 1:
@@ -111,34 +112,26 @@ class FeedbackMsg():
             logging.error("Invalid status.")
             return False
 
-        if self.msg[2] & 0x01 != 0:
-            logging.error("Invalid")
-            return False
+        torque = self.msg[3] | self.msg[4] << 8
+        self.torque = torque / 256 if torque < 0x8000 else (torque - 0x10000) / 256
 
-        torque = self.msg[3] << 8 | self.msg[4]
-        self.torque = (torque - 0x8000) / 256
+        velocity = self.msg[5] | self.msg[6] << 8
+        self.velocity = velocity * 2*math.pi / 256 if velocity < 0x8000 else (velocity - 0x10000) * 2*math.pi / 256
 
-        velocity = self.msg[5] << 8 | self.msg[6]
-        self.velocity = (velocity - 0x8000) * 2*math.pi / 256
-
-        position = self.msg[7] << 24 | self.msg[8] << 16 | self.msg[9] << 8 | self.msg[10]
-        self.position = (position - 0x80000000) * 2*math.pi / 32768
+        position = self.msg[7] | self.msg[8] << 8 | self.msg[9] << 16 | self.msg[10] << 24
+        self.position = position * 2*math.pi / 32768 if position < 0x80000000 else (position - 0x100000000) * 2*math.pi / 32768
 
         temp = self.msg[11]
-        self.temp = temp - 128
+        self.temp = temp if temp < 0x80 else temp - 0x100
 
-        error = self.msg[12] >> 5
+        error = self.msg[12] & 0x07
         self.error = error != 0
 
-        force = (self.msg[12] & 0x1f) << 7 | self.msg[13] >> 1
+        force = self.msg[12] >> 3 | (self.msg[13] & 0x1f) << 5
         self.force = force
 
-        if self.msg[13] & 0x01 != 0:
-            logging.error("Invalid")
-            return False
-
-        crc = crc16(' '.join(f'{byte:02x}' for byte in self.msg[:-2]))
-        if crc[2:] != f'{self.msg[14]:02x}' or crc[0:2] != f'{self.msg[15]:02x}':
+        crc = hex(crc_ccitt(0x0000, self.msg[0:14]))
+        if crc[-2:] != f'{self.msg[14]:02x}' or crc[2:4] != f'{self.msg[15]:02x}':
             logging.error("Invalid crc.")
             return False
 
@@ -147,7 +140,7 @@ class FeedbackMsg():
 
 class MotorController():
 
-    def __init__(self, port='/dev/ttyUSB0', baudrate=921600, timeout=1):
+    def __init__(self, port='/dev/ttyUSB0', baudrate=4000000, timeout=1):
         self.serial = serial.Serial(port, baudrate, timeout=timeout)
 
     def close(self):
@@ -166,3 +159,5 @@ class MotorController():
         recv_msg = FeedbackMsg(self.serial.read(16))
         if recv_msg.decode():
             return recv_msg
+        else:
+            return None

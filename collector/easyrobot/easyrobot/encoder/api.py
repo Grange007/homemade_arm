@@ -6,7 +6,8 @@ Author: Hongjie Fang.
 
 import re
 from easyrobot.encoder.base import EncoderBase
-from easyrobot.encoder.angle import AngleEncoder
+from easyrobot.encoder.cybergear_encoder import CybergearEncoder
+from easyrobot.encoder.unitree_encoder import UnitreeEncoder
 
 
 def get_encoder(**params):
@@ -18,7 +19,7 @@ def get_encoder(**params):
         del params['name']
     try:
         if re.fullmatch('[ -_]*angle[ -_]*', str.lower(name)):
-            return AngleEncoder(**params)
+            return CybergearEncoder(**params)
         else:
             return EncoderBase(**params)
     except Exception:

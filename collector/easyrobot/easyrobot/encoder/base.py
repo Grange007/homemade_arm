@@ -23,7 +23,7 @@ class EncoderBase(object):
     ):
         """
         Args:
-        - logger_name: str, optional, default: "AngleEncoder", the name of the logger;
+        - logger_name: str, optional, default: "Encoder", the name of the logger;
         - shm_name: str, optional, default: None, the shared memory name of the angle encoder data, None means no shared memory object;
         - streaming_freq: int, optional, default: 30, the streaming frequency.
         """
