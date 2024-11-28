@@ -4,7 +4,8 @@ import json
 import argparse
 from pynput import keyboard
 from easydict import EasyDict as edict
-from easyrobot.encoder.angle import AngleEncoder
+from easyrobot.encoder.cybergear_encoder import CybergearEncoder
+from easyrobot.encoder.unitree_encoder import UnitreeEncoder
 
 
 if __name__ == '__main__':
@@ -28,19 +29,15 @@ if __name__ == '__main__':
         raise AttributeError('Please provide the configuration file {}.'.format(run_path))
     with open(run_path, 'r') as f:
         cfgs = edict(json.load(f))
-    
+
     tid = int(input('Task ID: '))
     sid = int(input('Scene ID: '))
     uid = int(input('User ID: '))
-    
-    # tid = 0
-    # sid = 0
-    # uid = 0
  
-    # encoder_mi = AngleEncoder(**cfgs.encoder_MI)
-    # encoder_mi.streaming()
-    # encoder_unitree = AngleEncoder(**cfgs.encoder_Unitree)
-    # encoder_unitree.streaming()
+    Unitree_encoder = UnitreeEncoder(**cfgs.encoder_Unitree)
+    Unitree_encoder.streaming()
+    Cybergear_encoder = CybergearEncoder(**cfgs.encoder_Cybergear)
+    CyberGear_encoder.streaming()
     has_start = False
     has_stop = False
     print("start")
