@@ -1,9 +1,9 @@
 import time
 import Unitree
 
-motor_controller = Unitree.MotorController('/dev/ttyUSB0', 921600, timeout=1)
+motor_controller = Unitree.MotorController('/dev/ttyUSB0', 4000000, 1)
 
-for _ in range(50):
+for _ in range(5000):
     control_msg = Unitree.ControlMsg()
     control_msg.id       = 0
     control_msg.status   = 1
@@ -19,8 +19,7 @@ for _ in range(50):
         print("torque:  ", feedback_msg.torque)
         print("position:", feedback_msg.position)
         print("velocity:", feedback_msg.velocity)
-        print("Kp:      ", feedback_msg.Kp)
-        print("Kw:      ", feedback_msg.Kw)
+        print("error:   ", feedback_msg.error)
     time.sleep(0.1)
 
 # Close the serial port
