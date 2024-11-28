@@ -161,3 +161,4 @@ cython_debug/
 
 *.npy
 collector/data/*
+OrbbecSDK.log.txt
