@@ -114,3 +114,5 @@ class MotorController():
         recv_msg = FeedbackMsg(self.serial.read(17))
         if recv_msg.decode():
             return recv_msg
+        else:
+            return None
