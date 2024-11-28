@@ -70,12 +70,13 @@ class EndEffectorEncoder(EncoderBase):
         for i in ids:
             send_data = f"#{i:03d}PRAD!\n"
             self.ser.write(send_data.encode('utf-8'))
+            time.sleep(self.sleep_gap)
             
         rec_data = ""
         count = 0
         results = []
         while count < self.ids_num:
-            char = self.ser.read().decode('utf-8')  # 逐个字符读取
+            char = self.ser.read().decode('utf-8', errors='ignore')  # 逐个字符读取
             rec_data += char
             if char == '!':  # 遇到 '!' 停止读取并保存结果
                 results.append(rec_data)
@@ -111,7 +112,7 @@ class EndEffectorEncoder(EncoderBase):
             rec_data += char
             if char == '!':  # 遇到 '!' 停止读取并保存结果
                 break
-        if rec_data != f"#OK!\n":
+        if rec_data != f"#OK!":
             raise RuntimeError(f"Error releasing F: {rec_data}")
             return False
         else:
