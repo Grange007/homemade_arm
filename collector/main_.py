@@ -4,8 +4,10 @@ import json
 import argparse
 from pynput import keyboard
 from easydict import EasyDict as edict
-from easyrobot.encoder.angle import AngleEncoder
-
+# from easyrobot.encoder.angle import AngleEncoder
+from easyrobot.encoder.unitree_encoder import UnitreeEncoder
+from easyrobot.encoder.cybergear_encoder import CybergearEncoder
+from easyrobot.encoder.End_effector import EndEffectorEncoder
 
 if __name__ == '__main__':
     os.system("kill -9 `ps -ef | grep collector | grep -v grep | awk '{print $2}'`")
@@ -15,10 +17,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--task', '-t', 
-        default = 'test', 
+        default = 'servo', 
         help = 'task name', 
         type = str,
-        choices = ['grasp', 'test']
+        choices = ['servo', 'test']
     )
     args = parser.parse_args()
 
@@ -27,6 +29,7 @@ if __name__ == '__main__':
     if not os.path.exists(run_path):
         raise AttributeError('Please provide the configuration file {}.'.format(run_path))
     with open(run_path, 'r') as f:
+        print(run_path)
         cfgs = edict(json.load(f))
     
     tid = int(input('Task ID: '))
@@ -37,10 +40,12 @@ if __name__ == '__main__':
     # sid = 0
     # uid = 0
  
-    # encoder_mi = AngleEncoder(**cfgs.encoder_MI)
+    # encoder_mi = CybergearEncoder(**cfgs.encoder_MI)
     # encoder_mi.streaming()
-    # encoder_unitree = AngleEncoder(**cfgs.encoder_Unitree)
+    # encoder_unitree = UnitreeEncoder(**cfgs.encoder_Unitree)
     # encoder_unitree.streaming()
+    encoder_servo = EndEffectorEncoder(**cfgs.encoder_Servo)
+    encoder_servo.streaming()
     has_start = False
     has_stop = False
     print("start")
@@ -53,8 +58,9 @@ if __name__ == '__main__':
                 if not has_start:
                     pass
                 else:
-                    encoder_right.stop_streaming()
-                    encoder_left.stop_streaming()
+                    encoder_servo.stop_streaming()
+                    # encoder_mi.stop_streaming()
+                    # encoder_unitree.stop_streaming()
                     has_stop = True
             if key.char == 's':
                 if not has_start:

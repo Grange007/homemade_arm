@@ -83,8 +83,8 @@ class UnitreeEncoder(EncoderBase):
             else:
                 ret[self.Unitree_ids_map[id]] = 0.0
 
-        if not ignore_error and count != len(ids):
-            raise RuntimeError('Failure to receive all encoders, errors occurred in ID {}.'.format(remains))
+        # if not ignore_error and count != len(ids):
+        #     raise RuntimeError('Failure to receive all encoders, errors occurred in ID {}.'.format(remains))
         self.last_angle = ret
         return ret
 

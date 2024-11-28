@@ -34,7 +34,7 @@ class CybergearEncoder(EncoderBase):
         - shm_name: str, optional, default: None, the shared memory name of the angle encoder data, None means no shared memory object;
         - streaming_freq: int, optional, default: 30, the streaming frequency.
         """
-        self.Cybergear_ids = CyberGear_ids
+        self.Cybergear_ids = Cybergear_ids
         self.Cybergear_ids_map = {}
         for i, id in enumerate(Cybergear_ids):
             self.Cybergear_ids_map[id] = i
@@ -70,7 +70,7 @@ class CybergearEncoder(EncoderBase):
             ret = np.zeros(self.ids_num).astype(np.float32)
 
         for id in self.Cybergear_ids:
-            control_mode_msg = CyberGear.ControlModeMsg()
+            control_mode_msg = Cybergear.ControlModeMsg()
             control_mode_msg.can_id   = id
             control_mode_msg.torque   = 0.0
             control_mode_msg.position = 0.0
@@ -83,8 +83,8 @@ class CybergearEncoder(EncoderBase):
             else:
                 ret[self.Cybergear_ids_map[id]] = 0.0
 
-        if not ignore_error and count != len(ids):
-            raise RuntimeError('Failure to receive all encoders, errors occurred in ID {}.'.format(remains))
+        # if not ignore_error and count != len(self.Cybergear_ids):
+        #     raise RuntimeError('Failure to receive all encoders, errors occurred in ID {}.'.format(remains))
         self.last_angle = ret
         return ret
 
