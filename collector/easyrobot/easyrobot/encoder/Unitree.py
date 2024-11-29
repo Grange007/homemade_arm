@@ -148,8 +148,14 @@ class MotorController():
     def clear(self):
         self.serial.reset_input_buffer()
         self.serial.reset_output_buffer()
+        
+    def flush(self):
+        self.serial.flushInput()
+        self.serial.flushOutput()
 
     def control(self, send_msg):
+        self.flush()
+        self.clear()
         try:
             self.serial.write(bytes.fromhex(send_msg.encode()))
         except:

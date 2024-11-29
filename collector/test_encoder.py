@@ -1,4 +1,5 @@
 import numpy as np
+import time
 
 from easyrobot.encoder.unitree_encoder import UnitreeEncoder
 from easyrobot.encoder.cybergear_encoder import CybergearEncoder
@@ -12,3 +13,4 @@ while True:
     Unitree_e = Unitree_encoder.fetch_info()
     Cybergear_e = Cybergear_encoder.fetch_info()
     print(Unitree_e, Cybergear_e)
+    time.sleep(0.1)

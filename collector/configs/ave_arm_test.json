@@ -6,7 +6,7 @@
         "baudrate": 4000000,
         "logger_name": "Unitree-Encoder",
         "shm_name": "Unitree_encoder",
-        "streaming_freq": 30
+        "streaming_freq": 10
     }, 
     "Cybergear_encoder": {
         "ids": [1, 2],
@@ -14,15 +14,15 @@
         "baudrate": 921600,
         "logger_name": "Cybergear-Encoder",
         "shm_name": "Cybergear_encoder",
-        "streaming_freq": 30
+        "streaming_freq": 10
     }, 
     "servo_encoder": {
-        "ids": [1, 2, 3, 4, 5, 6, 7, 8],
+        "ids": [1, 2],
         "port": "/dev/ttyUSB2",
         "baudrate": 115200,
         "logger_name": "Servo-Encoder",
         "shm_name": "servo_encoder",
-        "streaming_freq": 30
+        "streaming_freq": 10
     }, 
 
     "data_path": "/home/grange/Program/act_arm/collector/data",
@@ -66,7 +66,7 @@
             "logger_name": "RealSense Camera",
             "shm_name_rgb": "image",
             "shm_name_depth": "depth",
-            "streaming_freq": 30
+            "streaming_freq": 10
         },
         {
             "name": "orbbec",
@@ -76,7 +76,7 @@
             "logger_name": "Orbbec Camera",
             "shm_name_rgb": "image_orbbec",
             "shm_name_depth": "depth_orbbec",
-            "streaming_freq": 30
+            "streaming_freq": 10
         }
     ]
 }

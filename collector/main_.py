@@ -16,7 +16,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--task', '-t', 
-        default = 'servo', 
+        default = 'test', 
         help = 'task name', 
         type = str,
         choices = ['servo', 'test']
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     Unitree_encoder = UnitreeEncoder(**cfgs.Unitree_encoder)
     Unitree_encoder.streaming()
     Cybergear_encoder = CybergearEncoder(**cfgs.Cybergear_encoder)
-    CyberGear_encoder.streaming()
+    Cybergear_encoder.streaming()
     servo_encoder = EndEffectorEncoder(**cfgs.servo_encoder)
     servo_encoder.streaming()
     has_start = False
@@ -54,7 +54,7 @@ if __name__ == '__main__':
                     pass
                 else:
                     Unitree_encoder.stop_streaming()
-                    CyberGear_encoder.stop_streaming()
+                    Cybergear_encoder.stop_streaming()
                     servo_encoder.stop_streaming()
                     has_stop = True
             if key.char == 's':
