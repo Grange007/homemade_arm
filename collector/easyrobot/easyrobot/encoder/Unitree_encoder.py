@@ -43,12 +43,32 @@ class UnitreeEncoder(EncoderBase):
         self.Unitree_controller = Unitree.MotorController(port, baudrate, 1)
         self.ids_num = len(self.ids)
         self.sleep_gap = sleep_gap
-        self.init_angles = self.get_angles(ignore_error = False)
+        self.init_angles = self.motor_init()
         super(UnitreeEncoder, self).__init__(
             logger_name = logger_name,
             shm_name = shm_name,
             streaming_freq = streaming_freq
         )
+    
+    def motor_init(self):
+        ret = np.zeros(self.ids_num).astype(np.float32)
+        for id in self.ids:
+            while True:
+                print("Unitree:", id)
+                control_msg = Unitree.ControlMsg()
+                control_msg.id       = id
+                control_msg.status   = 1
+                control_msg.torque   = 0.0
+                control_msg.position = 0.0
+                control_msg.velocity = 0.0
+                control_msg.Kp       = 0.0
+                control_msg.Kw       = 0.0
+                feedback_msg = self.Unitree_controller.control(control_msg)
+                if feedback_msg != None:
+                    ret[self.ids_map[id]] = (feedback_msg.position / 6.33)
+                    break
+        self.last_angles = ret
+        return ret
 
     def get_angles(self, ignore_error = False, **kwargs):
         """
@@ -78,8 +98,7 @@ class UnitreeEncoder(EncoderBase):
             if feedback_msg != None:
                 ret[self.ids_map[id]] = (feedback_msg.position / 6.33)
             else:
-                ret[self.ids_map[id]] = 0.0
-            time.sleep(self.sleep_gap)
+                ret[self.ids_map[id]] = self.last_angles[self.ids_map[id]]
 
         self.last_angles = ret
         return ret
