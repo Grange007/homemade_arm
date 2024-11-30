@@ -32,12 +32,13 @@ class Traj_executor:
 
         self.Unitree_init('/dev/ttyUSB0', 4000000)
         self.Cybergear_init('/dev/ttyUSB1', 921600)
-        self.timer = rospy.Timer(rospy.Duration(0.1), self.timer_callback)
+        self.timer = rospy.Timer(rospy.Duration(0.01), self.timer_callback)
     
     def Unitree_init(self, port, baudrate):
         self.Unitree_controller = Unitree.MotorController(port, baudrate, 1)
         for i in range(0, 3):
             while True:
+                print("Unitree", i)
                 control_msg = Unitree.ControlMsg()
                 control_msg.id       = i
                 control_msg.status   = 0
@@ -55,6 +56,7 @@ class Traj_executor:
         self.Cybergear_controller = Cybergear.MotorController(port, baudrate, 1)
         for i in range(0, 2):
             while True:
+                print("Cybergear", i + 1)
                 enable_msg = Cybergear.EnableMsg()
                 enable_msg.can_id  = i + 1
                 enable_msg.host_id = 253
@@ -85,6 +87,9 @@ class Traj_executor:
         rospy.loginfo(self.time_from_start)
 
     def timer_callback(self, event):
+        Unitree_zero = False
+        Cybergear_zero = False
+
         now = rospy.Time.now().to_sec()
         for i in range(len(self.time_from_start)):
             if now < self.time_from_start[i]:
@@ -98,8 +103,12 @@ class Traj_executor:
             control_msg.torque   = 0.0
             control_msg.position = self.positions[counter][i] * 6.33 + self.zero_positions[i]
             control_msg.velocity = self.velocities[counter][i] * 6.33
-            control_msg.Kp       = 5.0
-            control_msg.Kw       = 0.1
+            if Unitree_zero:
+                control_msg.Kp = 0.0
+                control_msg.Kw = 0.0
+            else:
+                control_msg.Kp = 5.0
+                control_msg.Kw = 0.1
             feedback_msg = self.Unitree_controller.control(control_msg)
             if feedback_msg != None:
                 if feedback_msg.position - self.zero_positions[i] < 0:
@@ -113,8 +122,12 @@ class Traj_executor:
             control_mode_msg.torque   = 0.0
             control_mode_msg.position = self.positions[counter][i + 3] + self.zero_positions[i + 3]
             control_mode_msg.velocity = self.velocities[counter][i + 3]
-            control_mode_msg.Kp       = 10.0
-            control_mode_msg.Ki       = 0.1
+            if Cybergear_zero:
+                control_mode_msg.Kp = 0.0
+                control_mode_msg.Ki = 0.0
+            else:
+                control_mode_msg.Kp = 10.0
+                control_mode_msg.Ki = 0.1
             feedback_msg = self.Cybergear_controller.controlMode(control_mode_msg)
             if feedback_msg != None:
                 if feedback_msg.position - self.zero_positions[i + 3] < 0:

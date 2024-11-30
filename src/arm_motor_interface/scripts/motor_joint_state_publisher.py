@@ -22,9 +22,9 @@ class MotorJointStatePublisher:
         self.joint_angles = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         self.joint_names = ['joint1', 'joint2', 'joint3', 'joint4', 'joint5', 'joint6']
         self.joint_state = JointState()
+        self.zero_positions = {}
         self.Unitree_init('/dev/ttyUSB0', 4000000)
         self.Cybergear_init('/dev/ttyUSB1', 921600)
-        rospy.sleep(1)
         self.timer = rospy.Timer(rospy.Duration(0.1), self.timer_callback)
 
     def Unitree_init(self, port, baudrate):
@@ -55,7 +55,6 @@ class MotorJointStatePublisher:
                 if feedback_msg != None:
                     self.zero_positions[i + 3] = feedback_msg.position
                     break
-
 
     def timer_callback(self, event):
         for i in range(0, 3):

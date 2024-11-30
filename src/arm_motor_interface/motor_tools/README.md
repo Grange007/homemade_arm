@@ -15,8 +15,9 @@ python3 example.py
 
 ### Build
 
+- Add `pybind11` submodule in `./Unitree`
+
 ```shell
-git submodule update
 cd Unitree
 mkdir build
 cd build

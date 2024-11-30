@@ -30,6 +30,8 @@ if feedback_msg != None:
     print("velocity:", feedback_msg.velocity)
     print("torque:  ", feedback_msg.torque)
     print("temp:    ", feedback_msg.temp)
+else:
+    print("Failed to send enableMsg.")
 time.sleep(0.5)
 
 control_mode_msg = Cybergear.ControlModeMsg()
@@ -49,6 +51,8 @@ if feedback_msg != None:
     print("velocity:", feedback_msg.velocity)
     print("torque:  ", feedback_msg.torque)
     print("temp:    ", feedback_msg.temp)
+else:
+    print("Failed to send controlModeMsg.")
 time.sleep(3)
 
 disable_msg = Cybergear.DisableMsg()
@@ -65,6 +69,8 @@ if feedback_msg != None:
     print("velocity:", feedback_msg.velocity)
     print("torque:  ", feedback_msg.torque)
     print("temp:    ", feedback_msg.temp)
+else:
+    print("Failed to send disableMsg.")
 
 # Close the serial port
 motor_controller.close()

@@ -4,7 +4,11 @@ import serial
 import struct
 
 import sys
-sys.path.append('./lib')
+import os
+cur_dir = os.path.dirname(os.path.abspath(__file__))
+lib_dir = os.path.join(cur_dir, 'lib')
+if lib_dir not in sys.path:
+    sys.path.append(lib_dir)
 import UnitreeMotorSDK
 
 logging.basicConfig(filename='Unitree.log', filemode='w', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
