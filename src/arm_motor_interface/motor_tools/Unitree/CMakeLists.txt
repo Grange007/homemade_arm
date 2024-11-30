@@ -1,13 +1,20 @@
-cmake_minimum_required(VERSION 2.8.2)
-project(UnitreeMotorSDK_M80106)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3")
+cmake_minimum_required(VERSION 3.1.0)
+project(UnitreeMotorSDK)
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 include_directories(include)
 link_directories(lib)
 
 set(EXTRA_LIBS libUnitreeMotorSDK_M80106_Linux64.so)
 
-add_executable(start example/start.cpp)
+add_executable(start example_cpp/start.cpp)
 target_link_libraries(start ${EXTRA_LIBS})
-add_executable(stop example/stop.cpp)
+add_executable(stop example_cpp/stop.cpp)
 target_link_libraries(stop ${EXTRA_LIBS})
+
+add_subdirectory(pybind11)
+pybind11_add_module(UnitreeMotorSDK src/wrapper.cpp)
+target_link_libraries(UnitreeMotorSDK PRIVATE ${EXTRA_LIBS})
+set_target_properties(UnitreeMotorSDK PROPERTIES LIBRARY_OUTPUT_DIRECTORY "../lib")

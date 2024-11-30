@@ -1,0 +1,3 @@
+[submodule "src/arm_motor_interface/motor_tools/Unitree/pybind11"]
+	path = src/arm_motor_interface/motor_tools/Unitree/pybind11
+	url = https://github.com/pybind/pybind11.git
