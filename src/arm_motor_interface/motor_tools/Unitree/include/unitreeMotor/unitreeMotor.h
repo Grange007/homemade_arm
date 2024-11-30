@@ -6,14 +6,14 @@
 #include <iostream>
 
 enum class MotorType{
-    GO_M8010_6,   
+    GO_M8010_6
 };
 
 struct MotorCmd{
-	// 定义 发送格式化数据
+    // 定义 发送格式化数据
     public:
         MotorType motorType = MotorType::GO_M8010_6;
-	    int hex_len = 17;                   
+        int hex_len = 17;                   
         unsigned short id;              // 电机ID 0~14 15:广播ID 此时电机无返回
         unsigned short mode;            // 电机模式 0:刹车 1:FOC闭环 2:电机标定(发送后等待5sec,期间禁止给电机发送消息)
         float T;                        // 期望关节的输出力矩(电机转子转矩 N.m) 范围: ±127.99
