@@ -1,8 +1,8 @@
 import numpy as np
 import time
 
-from easyrobot.encoder.unitree_encoder import UnitreeEncoder
-from easyrobot.encoder.cybergear_encoder import CybergearEncoder
+from easyrobot.encoder.Unitree_encoder import UnitreeEncoder
+from easyrobot.encoder.Cybergear_encoder import CybergearEncoder
 from easyrobot.encoder.End_effector import EndEffectorEncoder
 
 Unitree_encoder = UnitreeEncoder(ids = [0, 1, 2], port = '/dev/ttyUSB0', baudrate = 4000000)
@@ -11,6 +11,7 @@ Cybergear_encoder = CybergearEncoder(ids = [1, 2], port = '/dev/ttyUSB1', baudra
 
 while True:
     Unitree_e = Unitree_encoder.fetch_info()
+    print(Unitree_e)
     Cybergear_e = Cybergear_encoder.fetch_info()
-    print(Unitree_e, Cybergear_e)
+    print(Cybergear_e)
     time.sleep(0.1)

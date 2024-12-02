@@ -3,51 +3,15 @@ import logging
 import serial
 import struct
 
+import sys
+import os
+cur_dir = os.path.dirname(os.path.abspath(__file__))
+lib_dir = os.path.join(cur_dir, 'lib')
+if lib_dir not in sys.path:
+    sys.path.append(lib_dir)
+import UnitreeMotorSDK
+
 logging.basicConfig(filename='Unitree.log', filemode='w', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-
-
-crc_ccitt_table = [
-    0x0000, 0x1189, 0x2312, 0x329b, 0x4624, 0x57ad, 0x6536, 0x74bf,
-    0x8c48, 0x9dc1, 0xaf5a, 0xbed3, 0xca6c, 0xdbe5, 0xe97e, 0xf8f7,
-    0x1081, 0x0108, 0x3393, 0x221a, 0x56a5, 0x472c, 0x75b7, 0x643e,
-    0x9cc9, 0x8d40, 0xbfdb, 0xae52, 0xdaed, 0xcb64, 0xf9ff, 0xe876,
-    0x2102, 0x308b, 0x0210, 0x1399, 0x6726, 0x76af, 0x4434, 0x55bd,
-    0xad4a, 0xbcc3, 0x8e58, 0x9fd1, 0xeb6e, 0xfae7, 0xc87c, 0xd9f5,
-    0x3183, 0x200a, 0x1291, 0x0318, 0x77a7, 0x662e, 0x54b5, 0x453c,
-    0xbdcb, 0xac42, 0x9ed9, 0x8f50, 0xfbef, 0xea66, 0xd8fd, 0xc974,
-    0x4204, 0x538d, 0x6116, 0x709f, 0x0420, 0x15a9, 0x2732, 0x36bb,
-    0xce4c, 0xdfc5, 0xed5e, 0xfcd7, 0x8868, 0x99e1, 0xab7a, 0xbaf3,
-    0x5285, 0x430c, 0x7197, 0x601e, 0x14a1, 0x0528, 0x37b3, 0x263a,
-    0xdecd, 0xcf44, 0xfddf, 0xec56, 0x98e9, 0x8960, 0xbbfb, 0xaa72,
-    0x6306, 0x728f, 0x4014, 0x519d, 0x2522, 0x34ab, 0x0630, 0x17b9,
-    0xef4e, 0xfec7, 0xcc5c, 0xddd5, 0xa96a, 0xb8e3, 0x8a78, 0x9bf1,
-    0x7387, 0x620e, 0x5095, 0x411c, 0x35a3, 0x242a, 0x16b1, 0x0738,
-    0xffcf, 0xee46, 0xdcdd, 0xcd54, 0xb9eb, 0xa862, 0x9af9, 0x8b70,
-    0x8408, 0x9581, 0xa71a, 0xb693, 0xc22c, 0xd3a5, 0xe13e, 0xf0b7,
-    0x0840, 0x19c9, 0x2b52, 0x3adb, 0x4e64, 0x5fed, 0x6d76, 0x7cff,
-    0x9489, 0x8500, 0xb79b, 0xa612, 0xd2ad, 0xc324, 0xf1bf, 0xe036,
-    0x18c1, 0x0948, 0x3bd3, 0x2a5a, 0x5ee5, 0x4f6c, 0x7df7, 0x6c7e,
-    0xa50a, 0xb483, 0x8618, 0x9791, 0xe32e, 0xf2a7, 0xc03c, 0xd1b5,
-    0x2942, 0x38cb, 0x0a50, 0x1bd9, 0x6f66, 0x7eef, 0x4c74, 0x5dfd,
-    0xb58b, 0xa402, 0x9699, 0x8710, 0xf3af, 0xe226, 0xd0bd, 0xc134,
-    0x39c3, 0x284a, 0x1ad1, 0x0b58, 0x7fe7, 0x6e6e, 0x5cf5, 0x4d7c,
-    0xc60c, 0xd785, 0xe51e, 0xf497, 0x8028, 0x91a1, 0xa33a, 0xb2b3,
-    0x4a44, 0x5bcd, 0x6956, 0x78df, 0x0c60, 0x1de9, 0x2f72, 0x3efb,
-    0xd68d, 0xc704, 0xf59f, 0xe416, 0x90a9, 0x8120, 0xb3bb, 0xa232,
-    0x5ac5, 0x4b4c, 0x79d7, 0x685e, 0x1ce1, 0x0d68, 0x3ff3, 0x2e7a,
-    0xe70e, 0xf687, 0xc41c, 0xd595, 0xa12a, 0xb0a3, 0x8238, 0x93b1,
-    0x6b46, 0x7acf, 0x4854, 0x59dd, 0x2d62, 0x3ceb, 0x0e70, 0x1ff9,
-    0xf78f, 0xe606, 0xd49d, 0xc514, 0xb1ab, 0xa022, 0x92b9, 0x8330,
-    0x7bc7, 0x6a4e, 0x58d5, 0x495c, 0x3de3, 0x2c6a, 0x1ef1, 0x0f78
-]
-
-def crc_ccitt_byte(crc, c):
-    return (crc >> 8) ^ crc_ccitt_table[(crc ^ c) & 0xff]
-
-def crc_ccitt(crc, buffer):
-    for byte in buffer:
-        crc = crc_ccitt_byte(crc, byte)
-    return crc
 
 
 class ControlMsg():
@@ -62,24 +26,14 @@ class ControlMsg():
         self.Kw       = min(max(Kw, 0.0), 25.599)
 
     def encode(self):
-        id       = self.id
-        status   = self.status
-        torque   = int(self.torque * 256) if self.torque >= 0 else int(self.torque * 256) + 0x10000
-        velocity = int(self.velocity / (2*math.pi) * 256) if self.velocity >= 0 else int(self.velocity / (2*math.pi) * 256) + 0x10000
-        position = int(self.position / (2*math.pi) * 32768) if self.position >= 0 else int(self.position / (2*math.pi) * 32768) + 0x100000000
-        Kp       = int(self.Kp * 1280)
-        Kw       = int(self.Kw * 1280)
-
-        data = [status << 4 | id,
-                torque & 0xff, torque >> 8 & 0xff,
-                velocity & 0xff, velocity >> 8 & 0xff,
-                position & 0xff, position >> 8 & 0xff, position >> 16 & 0xff, position >> 24 & 0xff,
-                Kp & 0xff, Kp >> 8 & 0xff,
-                Kw & 0xff, Kw >> 8 & 0xff]
-        msg = "fe ee " + ' '.join(f'{byte:02x}' for byte in data)
-        crc = hex(crc_ccitt(0x0000, bytes.fromhex(msg.replace(" ", ""))))
-        msg += " " + crc[-2:] + " " + crc[2:4]
-        logging.info("controlMsg: " + msg)
+        msg = UnitreeMotorSDK.MotorCmd()
+        msg.id   = self.id
+        msg.mode = self.status
+        msg.T    = self.torque
+        msg.W    = self.velocity
+        msg.Pos  = self.position
+        msg.K_P  = self.Kp
+        msg.K_W  = self.Kw
         return msg
 
 
@@ -89,79 +43,35 @@ class FeedbackMsg():
         self.msg = msg
 
     def decode(self):
-        if len(self.msg) != 16:
+        if self.msg.correct == False:
             logging.error("Invalid feedbackMsg.")
             return False
-
-        if self.msg[0] != 0xfd or self.msg[1] != 0xee:
-            logging.error("Invalid header.")
-            return False
-
-        id = self.msg[2] & 0x0f
-        self.id = id
-
-        status = self.msg[2] >> 4 & 0x07
-        if status == 0:
-            self.status = "Lock"
-        elif status == 1:
-            self.status = "FOC"
-        elif status == 2:
-            self.status = "Cali"
-        if status >= 3:
-            logging.error("Invalid status.")
-            return False
-
-        torque = self.msg[3] | self.msg[4] << 8
-        self.torque = torque / 256 if torque < 0x8000 else (torque - 0x10000) / 256
-
-        velocity = self.msg[5] | self.msg[6] << 8
-        self.velocity = velocity * 2*math.pi / 256 if velocity < 0x8000 else (velocity - 0x10000) * 2*math.pi / 256
-
-        position = self.msg[7] | self.msg[8] << 8 | self.msg[9] << 16 | self.msg[10] << 24
-        self.position = position * 2*math.pi / 32768 if position < 0x80000000 else (position - 0x100000000) * 2*math.pi / 32768
-
-        temp = self.msg[11]
-        self.temp = temp if temp < 0x80 else temp - 0x100
-
-        error = self.msg[12] & 0x07
-        self.error = error != 0
-
-        force = self.msg[12] >> 3 | (self.msg[13] & 0x1f) << 5
-        self.force = force
-
-        crc = hex(crc_ccitt(0x0000, self.msg[0:14]))
-        if crc[-2:] != f'{self.msg[14]:02x}' or crc[2:4] != f'{self.msg[15]:02x}':
-            logging.error("Invalid crc.")
-            return False
-
+        
+        self.id       = self.msg.motor_id
+        self.status   = self.msg.mode
+        self.torque   = self.msg.T
+        self.velocity = self.msg.W
+        self.position = self.msg.Pos
+        self.temp     = self.msg.Temp
+        self.error    = self.msg.MError
+        self.force    = self.msg.footForce
         return True
 
 
 class MotorController():
 
     def __init__(self, port='/dev/ttyUSB0', baudrate=4000000, timeout=1):
-        self.serial = serial.Serial(port, baudrate, timeout=timeout)
-
-    def close(self):
-        self.serial.close()
-
-    def clear(self):
-        self.serial.reset_input_buffer()
-        self.serial.reset_output_buffer()
-        
-    def flush(self):
-        self.serial.flushInput()
-        self.serial.flushOutput()
+        self.serial = UnitreeMotorSDK.SerialPort(port)
 
     def control(self, send_msg):
-        self.flush()
-        self.clear()
+        send_msg = send_msg.encode()
+        recv_msg = UnitreeMotorSDK.MotorData()
         try:
-            self.serial.write(bytes.fromhex(send_msg.encode()))
+            self.serial.sendRecv(send_msg, recv_msg)
         except:
             logging.error("Failed to send controlMsg.")
             return None
-        recv_msg = FeedbackMsg(self.serial.read(16))
+        recv_msg = FeedbackMsg(recv_msg)
         if recv_msg.decode():
             return recv_msg
         else:

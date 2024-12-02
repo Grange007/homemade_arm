@@ -12,9 +12,9 @@ class Arm:
         self.positions = [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
         self.time_from_start = [0]
         self.zero_positions = {}
-        self.get_trace('./data/task4/scene3')
-        self.Unitree_init('/dev/ttyUSB0', 4000000)
-        self.Cybergear_init('/dev/ttyUSB1', 921600)
+        self.get_trace('./data/scene3')
+        self.Unitree_init('/dev/ttyUSB2', 4000000)
+        self.Cybergear_init('/dev/ttyUSB3', 921600)
         self.EndEffector_init('/dev/ttyUSB2',115200)
 
     def Unitree_init(self, port, baudrate):
@@ -49,10 +49,12 @@ class Arm:
                     self.zero_positions[i + 3] = feedback_msg.position
                     break
                 time.sleep(0.01)
+
     def EndEffector_init(self,port,baudrate):
         self.Endgear_controller =  Endgear.init('None',[1,2],30,port)
         self.Endgear_controller.recover_F(1)
         self.Endgear_controller.recover_F(2)
+
     def get_trace(self, folder_path):
         files_with_time = []
         for file_path in glob.glob(os.path.join(folder_path, '*.npy')):
@@ -99,8 +101,8 @@ class Arm:
                 control_msg.torque   = 0.0
                 control_msg.position = self.positions[counter][i] * 6.33 + self.zero_positions[i]
                 control_msg.velocity = 0.0 * 6.33
-                control_msg.Kp       = 0.0
-                control_msg.Kw       = 0.0
+                control_msg.Kp       = 3.0
+                control_msg.Kw       = 0.1
                 self.Unitree_controller.control(control_msg)
 
             for i in range(0, 2):
@@ -108,14 +110,14 @@ class Arm:
                 control_mode_msg.can_id   = i + 1
                 control_mode_msg.torque   = 0.0
                 control_mode_msg.position = self.positions[counter][i + 3] + self.zero_positions[i + 3]
-                control_mode_msg.velocity = 0.0 * 6.33
-                control_mode_msg.Kp       = 5.0
-                control_mode_msg.Ki       = 0.1
+                control_mode_msg.velocity = self.positions[counter][i + 3] - self.positions[counter - 1][i + 3]
+                control_mode_msg.Kp       = 10.0
+                control_mode_msg.Ki       = 3.0
                 self.Cybergear_controller.controlMode(control_mode_msg)
             
             self.Endgear_controller.reproduce_trajectory(self.positions[5:7])
-                
-            time.sleep(0.1)
+
+            time.sleep(0.01)
 
 
 if __name__ == '__main__':

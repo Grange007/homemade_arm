@@ -1,0 +1,34 @@
+{
+    "name": "Collector",
+    "Unitree_encoder": {
+        "ids": [0, 1, 2],
+        "port": "/dev/ttyUSB2",
+        "baudrate": 4000000,
+        "logger_name": "Unitree-Encoder",
+        "shm_name": "Unitree_encoder",
+        "streaming_freq": 10
+    },
+    "Cybergear_encoder": {
+        "ids": [1, 2],
+        "port": "/dev/ttyUSB3",
+        "baudrate": 921600,
+        "logger_name": "Cybergear-Encoder",
+        "shm_name": "Cybergear_encoder",
+        "streaming_freq": 10
+    },
+
+    "data_path": "/home/grange/Program/act_arm/collector/data",
+    "shm_data": {
+        "Unitree_encoder": {
+            "shape": [3],
+            "type": "float32"
+        },
+        "Cybergear_encoder": {
+            "shape": [2],
+            "type": "float32"
+        }
+    },
+    "cameras": [
+        
+    ]
+}
