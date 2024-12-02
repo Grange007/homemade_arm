@@ -16,10 +16,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--task', '-t', 
-        default = 'test', 
+        default = 'motor', 
         help = 'task name', 
         type = str,
-        choices = ['servo', 'test']
+        choices = ['servo', 'motor', 'test']
     )
     args = parser.parse_args()
 
