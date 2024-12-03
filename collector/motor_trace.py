@@ -13,8 +13,8 @@ class Arm:
         self.time_from_start = [0]
         self.zero_positions = {}
         self.get_trace('./data/scene3')
-        self.Unitree_init('/dev/ttyUSB2', 4000000)
-        self.Cybergear_init('/dev/ttyUSB3', 921600)
+        self.Unitree_init('/dev/ttyUSB0', 4000000)
+        self.Cybergear_init('/dev/ttyUSB1', 921600)
         self.EndEffector_init('/dev/ttyUSB2',115200)
 
     def Unitree_init(self, port, baudrate):
@@ -99,22 +99,22 @@ class Arm:
                 control_msg.id       = i
                 control_msg.status   = 1
                 control_msg.torque   = 0.0
-                control_msg.position = self.positions[counter][i] * 6.33 + self.zero_positions[i]
-                control_msg.velocity = 0.0 * 6.33
-                control_msg.Kp       = 3.0
-                control_msg.Kw       = 0.1
+                control_msg.position = (self.positions[counter][i] + self.positions[counter - 1][i]) / 2 * 6.33 + self.zero_positions[i]
+                control_msg.velocity = (self.positions[counter + 1][i + 3] - self.positions[counter][i + 3])* 6.33
+                control_msg.Kp       = 2.05
+                control_msg.Kw       = 0.2
                 self.Unitree_controller.control(control_msg)
 
             for i in range(0, 2):
                 control_mode_msg = Cybergear.ControlModeMsg()
                 control_mode_msg.can_id   = i + 1
                 control_mode_msg.torque   = 0.0
-                control_mode_msg.position = self.positions[counter][i + 3] + self.zero_positions[i + 3]
-                control_mode_msg.velocity = self.positions[counter][i + 3] - self.positions[counter - 1][i + 3]
+                control_mode_msg.position = (self.positions[counter][i + 3] + self.positions[counter - 1][i + 3]) / 2 + self.zero_positions[i + 3]
+                control_mode_msg.velocity = self.positions[counter + 1][i + 3] - self.positions[counter][i + 3]
                 control_mode_msg.Kp       = 10.0
                 control_mode_msg.Ki       = 3.0
                 self.Cybergear_controller.controlMode(control_mode_msg)
-            
+
             self.Endgear_controller.reproduce_trajectory(self.positions[5:7])
 
             time.sleep(0.01)

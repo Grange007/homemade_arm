@@ -5,6 +5,7 @@ __pycache__/
 
 # C extensions
 *.so
+!libUnitreeMotorSDK_M80106_Linux64.so
 
 # Distribution / packaging
 .Python
@@ -15,7 +16,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# lib/
 lib64/
 parts/
 sdist/
