@@ -175,84 +175,6 @@ class SetZeroMsg():
         return msg
 
 
-class ParamReadMsg():
-
-    def __init__(self, can_id=1, host_id=255, param=None, msg=None):
-        self.can_id = can_id
-        self.host_id = host_id
-        self.param  = param
-        self.msg    = msg
-
-    def encode(self):
-        type    = 0x11
-        host_id = self.host_id
-        can_id  = self.can_id << 3 | 0x04
-        index   = PARAMETERS[self.param]["index"]
-        length  = 0x08
-
-        data = [type << 3, host_id >> 5, host_id << 3 & 0xff | can_id >> 8, can_id & 0xff,
-                length, index >> 8, index & 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-        msg = "41 54 " + ' '.join(f'{byte:02x}' for byte in data) + " 0d 0a"
-        return msg
-
-    def decode(self):
-        # TODO
-        return False
-
-        if len(self.msg) != 17:
-            logging.warning("Invalid message.")
-            return False
-
-        if self.msg[0] != 0x41 or self.msg[1] != 0x54 or self.msg[15] != 0x0d or self.msg[16] != 0x0a:
-            logging.warning("Invalid header and tail.")
-            return False
-        
-        if self.msg[2] >> 3 != 0x12:
-            logging.warning("Invalid type.")
-            return False
-        
-        can_id = (self.msg[4] & 0x07) << 5 | self.msg[5] >> 3
-        self.can_id = can_id
-
-        if self.msg[5] & 0x07 != 0x04:
-            logging.warning("Invalid can id.")
-            return False
-        
-        if self.msg[6] != 0x80: 
-            logging.warning("Invalid data length.")
-            return False
-        
-        param = self.msg[8] << 8 | self.msg[7]
-        if param not in PARAMETERS["index"]:
-            logging.warning("Invalid param.")
-            return False
-        self.param = param
-
-        if self.msg[9] != 0x00 or self.msg[10] != 0x00:
-            logging.warning("Invalid data.")
-            return False
-        
-        value = self.msg[14] << 24 | self.msg[13] << 16 | self.msg[12] << 8 | self.msg[11]
-        if self.param == 0x7005:
-            if value == 0:
-                self.value = "control mode"
-            elif value == 1:
-                self.value = "position mode"
-            elif value == 2:
-                self.value = "speed mode"
-            elif value == 3:
-                self.value = "current mode"
-            else:
-                logging.warning("Invalid value.")
-                return False
-        elif self.param == 0x7019:
-            self.value = struct.unpack('f', struct.pack('I', value))[0]
-        elif self.param == 0x701A:
-            self.value = struct.unpack('f', struct.pack('I', value))[0]
-
-        return True
-
-
 class ParamWriteMsg():
 
     def __init__(self, can_id=1, host_id=255, param=None, value=None):
@@ -309,6 +231,8 @@ class MotorController():
         recv_msg = FeedbackMsg(self.serial.read(17))
         if recv_msg.decode():
             return recv_msg
+        else:
+            return None
 
     def enable(self, send_msg):
         try:
@@ -319,6 +243,8 @@ class MotorController():
         recv_msg = FeedbackMsg(self.serial.read(17))
         if recv_msg.decode():
             return recv_msg
+        else:
+            return None
 
     def disable(self, send_msg):
         try:
@@ -329,6 +255,8 @@ class MotorController():
         recv_msg = FeedbackMsg(self.serial.read(17))
         if recv_msg.decode():
             return recv_msg
+        else:
+            return None
     
     def setZero(self, send_msg):
         try:
@@ -339,6 +267,8 @@ class MotorController():
         recv_msg = FeedbackMsg(self.serial.read(17))
         if recv_msg.decode():
             return recv_msg
+        else:
+            return None
 
     def paramWrite(self, send_msg):
         try:
@@ -349,3 +279,5 @@ class MotorController():
         recv_msg = FeedbackMsg(self.serial.read(17))
         if recv_msg.decode():
             return recv_msg
+        else:
+            return None
