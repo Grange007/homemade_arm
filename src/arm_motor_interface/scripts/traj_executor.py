@@ -5,11 +5,16 @@ from sensor_msgs.msg import JointState
 
 import sys
 import os
+import serial
 cur_dir = os.path.dirname(os.path.abspath(__file__))
 CyberGear_dir = os.path.abspath(os.path.join(cur_dir, '..', 'motor_tools', 'CyberGear'))
 if CyberGear_dir not in sys.path:
     sys.path.append(CyberGear_dir)
+EndGear_dir = os.path.dirname(os.path.abspath(__file__))
+if EndGear_dir not in sys.path:
+    sys.path.append(EndGear_dir)
 import CyberGear
+import EndGear
 
 
 class Traj_executor:
@@ -27,6 +32,7 @@ class Traj_executor:
         self.time_from_start = [0]
 
         self.CyberGear_init()
+        self.EndGear_init()
         self.timer = rospy.Timer(rospy.Duration(0.1), self.timer_callback)
 
     def unitree_joint_state_callback(self, msg):
@@ -54,6 +60,11 @@ class Traj_executor:
         enable_msg_2.can_id  = 2
         enable_msg_2.host_id = 253
         self.cybergear_motor_controller.enable(enable_msg_2)
+        
+    def EndGear_init(self):
+        ser = serial.Serial(port='/dev/ttyUSB2', baudrate=115200, timeout=1)
+        self.end_gear = EndGear.EndGear(1, ser)
+        self.end_gear.open_serial()
 
     def traj_goal_callback(self, msg):
         now = rospy.Time.now().to_sec()
@@ -112,6 +123,12 @@ class Traj_executor:
             else:
                 self.joint_angles[4] = feedback_msg_2.position % 6.28
 
+        # joint 6
+        position = (self.positions[counter][5] / 3.14 * 180) / 270 * 2000 + 500
+        self.end_gear.send_data(position, 0.1)
+        received_position = self.end_gear.get_position()
+        self.joint_angles[5] = (received_position - 500) / 2000 * 270 / 180 * 3.14
+        
         self.joint_state.header.stamp = rospy.Time.now()
         self.joint_state.name = self.joint_names
         self.joint_state.position = self.joint_angles
