@@ -50,7 +50,7 @@ class EndGear:
         logging.info("已发送指令：" + command_to_send)
         data = self.readdata()
         logging.info("已接收数据：" + data)
-        return int(data[5:8])
+        return int(data[5:9])
 
     def get_id(self):
         command_to_send = f"#{self.id:03d}PID!\n"

@@ -23,7 +23,7 @@ def main():
     endgear2 = EndGear(2,shared_ser)
     endgear2.open_serial()
     print("初始化完成")
-    
+
     time.sleep(1)
     # 获取 ID
     current_id1 = endgear1.get_id()

@@ -5,6 +5,7 @@ from sensor_msgs.msg import JointState
 
 import sys
 import os
+import serial
 cur_dir = os.path.dirname(os.path.abspath(__file__))
 Cybergear_dir = os.path.abspath(os.path.join(cur_dir, '..', 'motor_tools', 'Cybergear'))
 if Cybergear_dir not in sys.path:
@@ -135,6 +136,12 @@ class Traj_executor:
                 else:
                     self.joint_angles[i + 3] = (feedback_msg.position - self.zero_positions[i + 3]) % 6.28
 
+        # joint 6
+        position = (self.positions[counter][5] / 3.14 * 180) / 270 * 2000 + 500
+        self.end_gear.send_data(position, 0.1)
+        received_position = self.end_gear.get_position()
+        self.joint_angles[5] = (received_position - 500) / 2000 * 270 / 180 * 3.14
+        
         self.joint_state.header.stamp = rospy.Time.now()
         self.joint_state.name = self.joint_names
         self.joint_state.position = self.joint_angles
