@@ -3,6 +3,8 @@ import rospy
 from control_msgs.msg import FollowJointTrajectoryActionGoal
 from sensor_msgs.msg import JointState
 
+import numpy as np
+from scipy.interpolate import CubicSpline
 import sys
 import os
 
@@ -36,9 +38,9 @@ class Traj_executor:
         self.Kp = [3.0, 3.0, 3.0, 5.0, 5.0, 5.0]
         self.Kv = [0.2, 0.2, 0.2, 4.0, 4.0, 4.0]
 
-        self.Unitree_init('/dev/ttyUSB0', 4000000)
-        self.Cybergear_init('/dev/ttyUSB1', 921600)
-        self.timer = rospy.Timer(rospy.Duration(0.01), self.timer_callback)
+        # self.Unitree_init('/dev/ttyUSB0', 4000000)
+        # self.Cybergear_init('/dev/ttyUSB1', 921600)
+        # self.timer = rospy.Timer(rospy.Duration(0.01), self.timer_callback)
     
     def Unitree_init(self, port, baudrate):
         self.Unitree_controller = Unitree.MotorController(port, baudrate, 1)
@@ -77,17 +79,32 @@ class Traj_executor:
         self.joint_names = msg.goal.trajectory.joint_names
         self.points = msg.goal.trajectory.points
         rospy.loginfo(self.goal_id)
-        
+
         # self.positions[i] is a list of positions of each joint at the ith time point
         # self.velocities[i] is a list of velocities of each joint at the ith time point
         # self.accelerations[i] is a list of accelerations of each joint at the ith time point
         # self.time_from_start[i] is the time from the start to the ith time point
-        for point in self.points:
-            self.positions.append(point.positions)
-            self.velocities.append(point.velocities)
-            self.accelerations.append(point.accelerations)
-            self.time_from_start.append(point.time_from_start.to_sec() + now)
-        
+
+        time_from_start = [point.time_from_start.to_sec() for point in self.points]
+        positions = [point.positions for point in self.points]
+        velocities = [point.velocities for point in self.points]
+        accelerations = [point.accelerations for point in self.points]
+
+        time_from_start = np.array(time_from_start)
+        position_splines = [CubicSpline(time_from_start, [pos[i] for pos in positions]) for i in range(len(self.joint_names))]
+        velocity_splines = [CubicSpline(time_from_start, [vel[i] for vel in velocities]) for i in range(len(self.joint_names))]
+        acceleration_splines = [CubicSpline(time_from_start, [acc[i] for acc in accelerations]) for i in range(len(self.joint_names))]
+
+        new_time_points = np.linspace(time_from_start[0], time_from_start[-1], num=4*len(time_from_start))
+        new_positions = [spline(new_time_points) for spline in position_splines]
+        new_velocities = [spline(new_time_points) for spline in velocity_splines]
+        new_accelerations = [spline(new_time_points) for spline in acceleration_splines]
+
+        self.positions = new_positions
+        self.velocities = new_velocities
+        self.accelerations = new_accelerations
+        self.time_from_start = new_time_points + now
+
         rospy.loginfo(self.positions)
         rospy.loginfo(self.velocities)
         rospy.loginfo(self.accelerations)
