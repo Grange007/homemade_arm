@@ -11,7 +11,7 @@ for _ in range(5000):
     control_msg.position = 0.0
     control_msg.velocity = 0.0
     control_msg.Kp       = 0.0
-    control_msg.Kw       = 0.0
+    control_msg.Kv       = 0.0
     feedback_msg = motor_controller.control(control_msg)
     if feedback_msg != None:
         print("id:      ", feedback_msg.id)

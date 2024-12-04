@@ -5,16 +5,16 @@ from sensor_msgs.msg import JointState
 
 import sys
 import os
-import serial
+
 cur_dir = os.path.dirname(os.path.abspath(__file__))
-Cybergear_dir = os.path.abspath(os.path.join(cur_dir, '..', 'motor_tools', 'Cybergear'))
-if Cybergear_dir not in sys.path:
-    sys.path.append(Cybergear_dir)
-import Cybergear
 Unitree_dir = os.path.abspath(os.path.join(cur_dir, '..', 'motor_tools', 'Unitree'))
 if Unitree_dir not in sys.path:
     sys.path.append(Unitree_dir)
 import Unitree
+Cybergear_dir = os.path.abspath(os.path.join(cur_dir, '..', 'motor_tools', 'Cybergear'))
+if Cybergear_dir not in sys.path:
+    sys.path.append(Cybergear_dir)
+import Cybergear
 
 
 class Traj_executor:
@@ -29,7 +29,12 @@ class Traj_executor:
         self.velocities = [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
         self.accelerations = [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
         self.time_from_start = [0]
+
         self.zero_positions = {}
+        self.Unitree_zero = False
+        self.Cybergear_zero = False
+        self.Kp = [3.0, 3.0, 3.0, 5.0, 5.0, 5.0]
+        self.Kv = [0.2, 0.2, 0.2, 4.0, 4.0, 4.0]
 
         self.Unitree_init('/dev/ttyUSB0', 4000000)
         self.Cybergear_init('/dev/ttyUSB1', 921600)
@@ -47,7 +52,7 @@ class Traj_executor:
                 control_msg.position = 0.0
                 control_msg.velocity = 0.0
                 control_msg.Kp       = 0.0
-                control_msg.Kw       = 0.0
+                control_msg.Kv       = 0.0
                 feedback_msg = self.Unitree_controller.control(control_msg)
                 if feedback_msg != None:
                     self.zero_positions[i] = feedback_msg.position
@@ -72,25 +77,23 @@ class Traj_executor:
         self.joint_names = msg.goal.trajectory.joint_names
         self.points = msg.goal.trajectory.points
         rospy.loginfo(self.goal_id)
+        
+        # self.positions[i] is a list of positions of each joint at the ith time point
+        # self.velocities[i] is a list of velocities of each joint at the ith time point
+        # self.accelerations[i] is a list of accelerations of each joint at the ith time point
+        # self.time_from_start[i] is the time from the start to the ith time point
         for point in self.points:
             self.positions.append(point.positions)
             self.velocities.append(point.velocities)
             self.accelerations.append(point.accelerations)
             self.time_from_start.append(point.time_from_start.to_sec() + now)
         
-        # self.positions[i] is a list of positions of each joint at the ith time point
-        # self.velocities[i] is a list of velocities of each joint at the ith time point
-        # self.accelerations[i] is a list of accelerations of each joint at the ith time point
-        # self.time_from_start[i] is the time from the start to the ith time point
         rospy.loginfo(self.positions)
         rospy.loginfo(self.velocities)
         rospy.loginfo(self.accelerations)
         rospy.loginfo(self.time_from_start)
 
     def timer_callback(self, event):
-        Unitree_zero = False
-        Cybergear_zero = False
-
         now = rospy.Time.now().to_sec()
         for i in range(len(self.time_from_start)):
             if now < self.time_from_start[i]:
@@ -104,12 +107,12 @@ class Traj_executor:
             control_msg.torque   = 0.0
             control_msg.position = self.positions[counter][i] * 6.33 + self.zero_positions[i]
             control_msg.velocity = self.velocities[counter][i] * 6.33
-            if Unitree_zero:
+            if self.Unitree_zero:
                 control_msg.Kp = 0.0
-                control_msg.Kw = 0.0
+                control_msg.Kv = 0.0
             else:
-                control_msg.Kp = 5.0
-                control_msg.Kw = 0.1
+                control_msg.Kp = self.Kp[i]
+                control_msg.Kv = self.Kv[i]
             feedback_msg = self.Unitree_controller.control(control_msg)
             if feedback_msg != None:
                 if feedback_msg.position - self.zero_positions[i] < 0:
@@ -123,12 +126,12 @@ class Traj_executor:
             control_mode_msg.torque   = 0.0
             control_mode_msg.position = self.positions[counter][i + 3] + self.zero_positions[i + 3]
             control_mode_msg.velocity = self.velocities[counter][i + 3]
-            if Cybergear_zero:
+            if self.Cybergear_zero:
                 control_mode_msg.Kp = 0.0
-                control_mode_msg.Ki = 0.0
+                control_mode_msg.Kv = 0.0
             else:
-                control_mode_msg.Kp = 10.0
-                control_mode_msg.Ki = 0.1
+                control_mode_msg.Kp = self.Kp[i + 3]
+                control_mode_msg.Kv = self.Kv[i + 3]
             feedback_msg = self.Cybergear_controller.controlMode(control_mode_msg)
             if feedback_msg != None:
                 if feedback_msg.position - self.zero_positions[i + 3] < 0:
@@ -136,7 +139,6 @@ class Traj_executor:
                 else:
                     self.joint_angles[i + 3] = (feedback_msg.position - self.zero_positions[i + 3]) % 6.28
 
-        # joint 6
         position = (self.positions[counter][5] / 3.14 * 180) / 270 * 2000 + 500
         self.end_gear.send_data(position, 0.1)
         received_position = self.end_gear.get_position()

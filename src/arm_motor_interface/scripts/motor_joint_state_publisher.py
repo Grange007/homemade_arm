@@ -38,7 +38,7 @@ class MotorJointStatePublisher:
                 control_msg.position = 0.0
                 control_msg.velocity = 0.0
                 control_msg.Kp       = 0.0
-                control_msg.Kw       = 0.0
+                control_msg.Kv       = 0.0
                 feedback_msg = self.Unitree_controller.control(control_msg)
                 if feedback_msg != None:
                     self.zero_positions[i] = feedback_msg.position
@@ -65,7 +65,7 @@ class MotorJointStatePublisher:
             control_msg.position = 0.0
             control_msg.velocity = 0.0
             control_msg.Kp       = 0.0
-            control_msg.Kw       = 0.0
+            control_msg.Kv       = 0.0
             feedback_msg = self.Unitree_controller.control(control_msg)
             if feedback_msg != None:
                 if feedback_msg.position - self.zero_positions[i] < 0:
@@ -80,7 +80,7 @@ class MotorJointStatePublisher:
             control_mode_msg.position = 0.0
             control_mode_msg.velocity = 0.0
             control_mode_msg.Kp       = 0.0
-            control_mode_msg.Ki       = 0.0
+            control_mode_msg.Kv       = 0.0
             feedback_msg = self.Cybergear_controller.controlMode(control_mode_msg)
             if feedback_msg != None:
                 if feedback_msg.position - self.zero_positions[i + 3] < 0:
