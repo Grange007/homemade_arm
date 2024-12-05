@@ -5,7 +5,7 @@ import time
 import serial
 
 class EndEffectorTra:
-    def __init__(self, file_path, ids,frequency,servo_port):
+    def __init__(self, file_path, ids, frequency, servo_port):
         """
         初始化 EndEffectorTra 类。
 
@@ -19,6 +19,7 @@ class EndEffectorTra:
         self.frequency = frequency 
         self.sleepgap = 1/self.frequency
         self.ser = serial.Serial(servo_port, baudrate=115200, timeout=1)
+
     def load_all_npy(self,whether):
         """
         读取 file_path 目录下的所有 .npy 文件并返回数据列表。
@@ -41,26 +42,41 @@ class EndEffectorTra:
         
         return norm_stats_list
 
-    def reproduce_trajectory(self,data):
+    def recover_F(self, id):
+        self.ser.flushInput()
+        self.ser.write(f"#{id:03d}PULR!\n".encode('utf-8'))
+        rec_data = ""
+        while True:
+            char = self.ser.read().decode('utf-8')  # 逐个字符读取
+            rec_data += char
+            print(rec_data)
+            if char == '!':  # 遇到 '!' 停止读取并保存结果
+                break
+        if rec_data != f"#OK!":
+            raise RuntimeError(f"Error releasing F: {rec_data}")
+            return False
+        else:
+            return True
+
+    def reproduce_trajectory(self, data):
         """
         进行轨迹复现并打印轨迹数据。
         """
         ids_num = len(self.ids)
         sleepgap1 = self.sleepgap*1000
         sleepgap1 = int(sleepgap1)
-        
-        pos = data/270*2000+500
-        pos = pos.astype(int)
-        print('POS:',pos)
-            
+
+        pos = {}
+
         for i in range(ids_num):
+            pos[i] = data[i]/270*2000+500
+            pos[i] = int(pos[i])
             send_data=''
             send_data += f"#{self.ids[i]:03d}P{pos[i]:04d}T{sleepgap1:04d}!"
-            print(send_data)
             self.ser.write(send_data.encode('utf-8')) 
             time.sleep(self.sleepgap)
             # 示例：打印给定 ID 的轨迹数据
-            
+
     def close_servo(self):
         self.ser.close()
 

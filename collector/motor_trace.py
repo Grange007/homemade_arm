@@ -12,14 +12,17 @@ class Arm:
         self.positions = [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
         self.time_from_start = [0]
         self.zero_positions = {}
-        self.get_trace('./data/task6/scene1')
+        self.get_trace('./data/task1/scene1')
         self.Unitree_init('/dev/ttyUSB0', 4000000)
+        print("Unitree init done")
         self.Cybergear_init('/dev/ttyUSB1', 921600)
+        print("Cybergear init done")
         self.EndEffector_init('/dev/ttyUSB2',115200)
+        print("EndEffector init done")
         self.fv = 0.2
-        self.Kp = [2.05, 3.0, 2.05, 3.0, 3.0]
+        self.Kp = [3.0, 3.0, 2.05, 25.0, 20.0]
         self.Kw = [0.2, 0.2, 0.2, 4.0, 4.0]
-        self.freq = 0.01
+        self.freq = 0.02
 
     def Unitree_init(self, port, baudrate):
         self.Unitree_controller = Unitree.MotorController(port, baudrate, 1)
@@ -38,7 +41,7 @@ class Arm:
                 if feedback_msg != None:
                     self.zero_positions[i] = feedback_msg.position
                     break
-                time.sleep(0.01)
+                time.sleep(0.1)
 
     def Cybergear_init(self, port, baudrate):
         self.Cybergear_controller = Cybergear.MotorController(port, baudrate, 1)
@@ -52,10 +55,10 @@ class Arm:
                 if feedback_msg != None:
                     self.zero_positions[i + 3] = feedback_msg.position
                     break
-                time.sleep(0.01)
+                time.sleep(0.1)
 
     def EndEffector_init(self, port, baudrate):
-        self.Endgear_controller =  Endgear.EndEffectorTra('None', [1,2], 30, port)
+        self.Endgear_controller =  Endgear.EndEffectorTra('None', [1, 2], 30, port)
         self.Endgear_controller.recover_F(1)
         self.Endgear_controller.recover_F(2)
 
@@ -88,7 +91,7 @@ class Arm:
         print(self.zero_positions)
         for counter in range(1, len(self.time_from_start) - 1):
             print(self.time_from_start[counter], self.positions[counter])
-            
+
             flag = True
             for id in range(len(self.positions[counter]) - 2):
                 if self.positions[counter][id] - self.positions[counter - 1][id] > 0.3:
@@ -119,7 +122,7 @@ class Arm:
                 control_mode_msg.Ki       = self.Kw[i + 3]
                 self.Cybergear_controller.controlMode(control_mode_msg)
             
-            self.Endgear_controller.reproduce_trajectory(self.positions[counter][5:7])
+            self.Endgear_controller.reproduce_trajectory(self.positions[counter][5:7] + [5, 5])
 
             time.sleep(self.freq)
 
