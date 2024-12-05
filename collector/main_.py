@@ -4,8 +4,8 @@ import json
 import argparse
 from pynput import keyboard
 from easydict import EasyDict as edict
-from easyrobot.encoder.unitree_encoder import UnitreeEncoder
-from easyrobot.encoder.cybergear_encoder import CybergearEncoder
+from easyrobot.encoder.Unitree_encoder import UnitreeEncoder
+from easyrobot.encoder.Cybergear_encoder import CybergearEncoder
 from easyrobot.encoder.End_effector import EndEffectorEncoder
 
 if __name__ == '__main__':
@@ -16,7 +16,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--task', '-t', 
-        default = 'motor', 
+        default = 'test', 
         help = 'task name', 
         type = str,
         choices = ['servo', 'motor', 'test']

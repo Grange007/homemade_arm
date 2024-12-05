@@ -2,7 +2,7 @@
     "name": "Collector",
     "Unitree_encoder": {
         "ids": [0, 1, 2],
-        "port": "/dev/ttyUSB2",
+        "port": "/dev/ttyUSB0",
         "baudrate": 4000000,
         "logger_name": "Unitree-Encoder",
         "shm_name": "Unitree_encoder",
@@ -10,7 +10,7 @@
     },
     "Cybergear_encoder": {
         "ids": [1, 2],
-        "port": "/dev/ttyUSB3",
+        "port": "/dev/ttyUSB1",
         "baudrate": 921600,
         "logger_name": "Cybergear-Encoder",
         "shm_name": "Cybergear_encoder",

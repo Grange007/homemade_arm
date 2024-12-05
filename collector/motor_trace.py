@@ -12,10 +12,14 @@ class Arm:
         self.positions = [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
         self.time_from_start = [0]
         self.zero_positions = {}
-        self.get_trace('./data/scene3')
-        self.Unitree_init('/dev/ttyUSB2', 4000000)
-        self.Cybergear_init('/dev/ttyUSB3', 921600)
+        self.get_trace('./data/task6/scene1')
+        self.Unitree_init('/dev/ttyUSB0', 4000000)
+        self.Cybergear_init('/dev/ttyUSB1', 921600)
         self.EndEffector_init('/dev/ttyUSB2',115200)
+        self.fv = 0.2
+        self.Kp = [2.05, 3.0, 2.05, 3.0, 3.0]
+        self.Kw = [0.2, 0.2, 0.2, 4.0, 4.0]
+        self.freq = 0.01
 
     def Unitree_init(self, port, baudrate):
         self.Unitree_controller = Unitree.MotorController(port, baudrate, 1)
@@ -50,8 +54,8 @@ class Arm:
                     break
                 time.sleep(0.01)
 
-    def EndEffector_init(self,port,baudrate):
-        self.Endgear_controller =  Endgear.init('None',[1,2],30,port)
+    def EndEffector_init(self, port, baudrate):
+        self.Endgear_controller =  Endgear.EndEffectorTra('None', [1,2], 30, port)
         self.Endgear_controller.recover_F(1)
         self.Endgear_controller.recover_F(2)
 
@@ -86,13 +90,13 @@ class Arm:
             print(self.time_from_start[counter], self.positions[counter])
             
             flag = True
-            for id in range(len(self.positions[counter])):
+            for id in range(len(self.positions[counter]) - 2):
                 if self.positions[counter][id] - self.positions[counter - 1][id] > 0.3:
                     print("Warning: The speed is too fast!")
                     flag = False
                     break
             if not flag:
-                continue
+                break
 
             for i in range(0, 3):
                 control_msg = Unitree.ControlMsg()
@@ -100,9 +104,9 @@ class Arm:
                 control_msg.status   = 1
                 control_msg.torque   = 0.0
                 control_msg.position = self.positions[counter][i] * 6.33 + self.zero_positions[i]
-                control_msg.velocity = 0.0 * 6.33
-                control_msg.Kp       = 3.0
-                control_msg.Kw       = 0.1
+                control_msg.velocity = (self.positions[counter + 1][i] - self.positions[counter][i]) * 6.33 * self.fv
+                control_msg.Kp       = self.Kp[i]
+                control_msg.Kw       = self.Kw[i]
                 self.Unitree_controller.control(control_msg)
 
             for i in range(0, 2):
@@ -110,14 +114,14 @@ class Arm:
                 control_mode_msg.can_id   = i + 1
                 control_mode_msg.torque   = 0.0
                 control_mode_msg.position = self.positions[counter][i + 3] + self.zero_positions[i + 3]
-                control_mode_msg.velocity = self.positions[counter][i + 3] - self.positions[counter - 1][i + 3]
-                control_mode_msg.Kp       = 10.0
-                control_mode_msg.Ki       = 3.0
+                control_mode_msg.velocity = (self.positions[counter + 1][i + 3] - self.positions[counter][i + 3]) * self.fv
+                control_mode_msg.Kp       = self.Kp[i + 3]
+                control_mode_msg.Ki       = self.Kw[i + 3]
                 self.Cybergear_controller.controlMode(control_mode_msg)
             
-            self.Endgear_controller.reproduce_trajectory(self.positions[5:7])
+            self.Endgear_controller.reproduce_trajectory(self.positions[counter][5:7])
 
-            time.sleep(0.01)
+            time.sleep(self.freq)
 
 
 if __name__ == '__main__':

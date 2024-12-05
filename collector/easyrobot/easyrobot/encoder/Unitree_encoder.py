@@ -57,7 +57,7 @@ class UnitreeEncoder(EncoderBase):
                 print("Unitree:", id)
                 control_msg = Unitree.ControlMsg()
                 control_msg.id       = id
-                control_msg.status   = 1
+                control_msg.status   = 0
                 control_msg.torque   = 0.0
                 control_msg.position = 0.0
                 control_msg.velocity = 0.0
