@@ -10,6 +10,7 @@ class BallControl:
     def __init__(self, filename, is_show):
         # 1. model and data
         self.model = mj.MjModel.from_xml_path(filename)
+        self.counter = 0
         self.data = mj.MjData(self.model)
         self.is_show = is_show
         if self.is_show:
@@ -24,9 +25,13 @@ class BallControl:
 
     def init_controller(self):
         # 1. set init pos
-        self.data.qpos[0] = 0.1
-        self.data.qvel[0] = 2.0
-        self.data.qvel[2] = 5.0
+        self.model.opt.gravity[:] = 0
+        self.model.opt.wind[:] = 0
+        self.data.qpos[0] = 0.0
+        self.data.qpos[1] = 0.0
+        self.data.qpos[2] = 0.0
+        self.data.qvel[:] = 0
+        self.data.qacc[:] = 0
         # 2. set the controller
         mj.set_mjcb_control(self.controller)
 
@@ -36,19 +41,21 @@ class BallControl:
         The drag force has the form of
         F = (cv^Tv)v / ||v||
         """
-        vx, vy, vz = data.qvel[0], data.qvel[1], data.qvel[2]
-        v = np.sqrt(vx * vx + vy * vy + vz * vz)
-        c = 1.0
+        # vx, vy, vz = data.qvel[0], data.qvel[1], data.qvel[2]
+        # v = np.sqrt(vx * vx + vy * vy + vz * vz)
+        # c = 1.0
         # data.qfrc_applied[0] = -c * v * vx
         # data.qfrc_applied[1] = -c * v * vy
         # data.qfrc_applied[2] = -c * v * vz
-        data.qvel[0] = 0.4
-        data.qvel[1] = 0.4
-        data.qvel[2] = 0.4
-        data.qvel[3] = 0.4
-        data.qvel[4] = 0.4
-        data.qvel[5] = 0.4
-        data.qvel[6] = 0.4
+        data.qpos[0] = self.counter
+        data.qpos[1] = self.counter
+        data.qpos[2] = self.counter
+        data.qpos[3] = self.counter
+        data.qpos[4] = self.counter
+        data.qpos[5] = self.counter
+        data.qpos[6] = self.counter
+        data.qvel[:] = 0
+        data.qacc[:] = 0
 
     def main(self):
         sim_start, sim_end = time.time(), 100.0
@@ -70,6 +77,7 @@ class BallControl:
             step_next_delta = self.model.opt.timestep * loop_count - (time.time() - step_start)
             if step_next_delta > 0:
                 time.sleep(step_next_delta)
+            self.counter += 0.01
         if self.is_show:
             self.viewer.close()
 
