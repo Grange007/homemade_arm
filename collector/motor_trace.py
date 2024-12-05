@@ -12,7 +12,7 @@ class Arm:
         self.positions = [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
         self.time_from_start = [0]
         self.zero_positions = {}
-        self.get_trace('./data/task1/scene1')
+        self.get_trace('./data/task1260212/scene1')
         self.Unitree_init('/dev/ttyUSB0', 4000000)
         print("Unitree init done")
         self.Cybergear_init('/dev/ttyUSB1', 921600)
