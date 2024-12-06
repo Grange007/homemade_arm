@@ -3,10 +3,12 @@ import rospy
 from control_msgs.msg import FollowJointTrajectoryActionGoal
 from sensor_msgs.msg import JointState
 
-import numpy as np
 from scipy.interpolate import CubicSpline
-import sys
+import numpy as np
 import os
+import sys
+import time
+
 
 cur_dir = os.path.dirname(os.path.abspath(__file__))
 Unitree_dir = os.path.abspath(os.path.join(cur_dir, '..', 'motor_tools', 'Unitree'))
@@ -27,20 +29,20 @@ class Traj_executor:
         self.joint_names = ['joint1', 'joint2', 'joint3', 'joint4', 'joint5', 'joint6']
         self.joint_state = JointState()
 
-        self.positions = [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
-        self.velocities = [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
-        self.accelerations = [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
         self.time_from_start = [0]
+        self.positions = [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
+        self.velocities = [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
+        self.accelerations = [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
 
         self.zero_positions = {}
         self.Unitree_zero = False
         self.Cybergear_zero = False
-        self.Kp = [3.0, 3.0, 3.0, 5.0, 5.0, 5.0]
-        self.Kv = [0.2, 0.2, 0.2, 4.0, 4.0, 4.0]
+        self.Kp = [3.0, 3.0, 2.05, 25.0, 20.0]
+        self.Kv = [0.2, 0.2, 0.2, 4.0, 4.0]
 
-        # self.Unitree_init('/dev/ttyUSB0', 4000000)
-        # self.Cybergear_init('/dev/ttyUSB1', 921600)
-        # self.timer = rospy.Timer(rospy.Duration(0.01), self.timer_callback)
+        self.Unitree_init('/dev/ttyUSB0', 4000000)
+        self.Cybergear_init('/dev/ttyUSB1', 921600)
+        self.timer = rospy.Timer(rospy.Duration(0.01), self.timer_callback)
     
     def Unitree_init(self, port, baudrate):
         self.Unitree_controller = Unitree.MotorController(port, baudrate, 1)
@@ -59,6 +61,8 @@ class Traj_executor:
                 if feedback_msg != None:
                     self.zero_positions[i] = feedback_msg.position
                     break
+                time.sleep(0.1)
+        print("Unitree initialized")
 
     def Cybergear_init(self, port, baudrate):
         self.Cybergear_controller = Cybergear.MotorController(port, baudrate, 1)
@@ -72,6 +76,8 @@ class Traj_executor:
                 if feedback_msg != None:
                     self.zero_positions[i + 3] = feedback_msg.position
                     break
+                time.sleep(0.1)
+        print("Cybergear initialized")
 
     def traj_goal_callback(self, msg):
         now = rospy.Time.now().to_sec()
@@ -80,35 +86,50 @@ class Traj_executor:
         self.points = msg.goal.trajectory.points
         rospy.loginfo(self.goal_id)
 
+        # self.time_from_start[i] is the time from the start to the ith time point
         # self.positions[i] is a list of positions of each joint at the ith time point
         # self.velocities[i] is a list of velocities of each joint at the ith time point
         # self.accelerations[i] is a list of accelerations of each joint at the ith time point
-        # self.time_from_start[i] is the time from the start to the ith time point
 
-        time_from_start = [point.time_from_start.to_sec() for point in self.points]
-        positions = [point.positions for point in self.points]
-        velocities = [point.velocities for point in self.points]
-        accelerations = [point.accelerations for point in self.points]
+        # time_from_start = np.array([point.time_from_start.to_sec() for point in self.points])
+        # positions = np.array([point.positions for point in self.points])
+        # velocities = np.array([point.velocities for point in self.points])
+        # accelerations = np.array([point.accelerations for point in self.points])
 
-        time_from_start = np.array(time_from_start)
-        position_splines = [CubicSpline(time_from_start, [pos[i] for pos in positions]) for i in range(len(self.joint_names))]
-        velocity_splines = [CubicSpline(time_from_start, [vel[i] for vel in velocities]) for i in range(len(self.joint_names))]
-        acceleration_splines = [CubicSpline(time_from_start, [acc[i] for acc in accelerations]) for i in range(len(self.joint_names))]
+        # position_splines = [CubicSpline(time_from_start, positions)]
+        # velocity_splines = [CubicSpline(time_from_start, velocities)]
+        # acceleration_splines = [CubicSpline(time_from_start, accelerations)]
 
-        new_time_points = np.linspace(time_from_start[0], time_from_start[-1], num=4*len(time_from_start))
-        new_positions = [spline(new_time_points) for spline in position_splines]
-        new_velocities = [spline(new_time_points) for spline in velocity_splines]
-        new_accelerations = [spline(new_time_points) for spline in acceleration_splines]
+        # new_time_points = np.linspace(time_from_start[0], time_from_start[-1], num=4*len(time_from_start))
+        # new_positions = [spline(new_time_points).tolist() for spline in position_splines]
+        # new_velocities = [spline(new_time_points).tolist() for spline in velocity_splines]
+        # new_accelerations = [spline(new_time_points).tolist() for spline in acceleration_splines]
 
-        self.positions = new_positions
-        self.velocities = new_velocities
-        self.accelerations = new_accelerations
-        self.time_from_start = new_time_points + now
+        # for i in range(len(new_time_points)):
+        #     self.time_from_start.append(new_time_points[i] + now)
+        #     self.positions.append(new_positions[i])
+        #     self.velocities.append(new_velocities[i])
+        #     self.accelerations.append(new_accelerations[i])
 
-        rospy.loginfo(self.positions)
-        rospy.loginfo(self.velocities)
-        rospy.loginfo(self.accelerations)
-        rospy.loginfo(self.time_from_start)
+        # print('\n')
+        # print("positions", positions)
+        # print("new_positions", new_positions)
+        # print("self.positions", self.positions)
+        # print('\n')
+        # print("time_from_start", time_from_start)
+        # print("new_time_points", new_time_points)
+        # print("self.time_from_start", self.time_from_start)
+
+        for point in self.points:
+            self.positions.append(point.positions)
+            self.velocities.append(point.velocities)
+            self.accelerations.append(point.accelerations)
+            self.time_from_start.append(point.time_from_start.to_sec() + now)
+
+        # rospy.loginfo(self.time_from_start)
+        # rospy.loginfo(self.positions)
+        # rospy.loginfo(self.velocities)
+        # rospy.loginfo(self.accelerations)
 
     def timer_callback(self, event):
         now = rospy.Time.now().to_sec()
@@ -116,6 +137,10 @@ class Traj_executor:
             if now < self.time_from_start[i]:
                 break
             counter = i
+        # print(len(self.time_from_start))
+        # print(len(self.positions))
+        # print("counter", counter)
+        # print("positions", self.positions[counter])
 
         for i in range(0, 3):
             control_msg = Unitree.ControlMsg()
@@ -136,7 +161,7 @@ class Traj_executor:
                     self.joint_angles[i] = -(((-feedback_msg.position + self.zero_positions[i]) / 6.33) % 6.28)
                 else:
                     self.joint_angles[i] = ((feedback_msg.position - self.zero_positions[i]) / 6.33) % 6.28
-        
+
         for i in range(0, 2):
             control_mode_msg = Cybergear.ControlModeMsg()
             control_mode_msg.can_id   = i + 1
@@ -156,11 +181,11 @@ class Traj_executor:
                 else:
                     self.joint_angles[i + 3] = (feedback_msg.position - self.zero_positions[i + 3]) % 6.28
 
-        position = (self.positions[counter][5] / 3.14 * 180) / 270 * 2000 + 500
-        self.end_gear.send_data(position, 0.1)
-        received_position = self.end_gear.get_position()
-        self.joint_angles[5] = (received_position - 500) / 2000 * 270 / 180 * 3.14
-        
+        # position = (self.positions[counter][5] / 3.14 * 180) / 270 * 2000 + 500
+        # self.end_gear.send_data(position, 0.1)
+        # received_position = self.end_gear.get_position()
+        # self.joint_angles[5] = (received_position - 500) / 2000 * 270 / 180 * 3.14
+
         self.joint_state.header.stamp = rospy.Time.now()
         self.joint_state.name = self.joint_names
         self.joint_state.position = self.joint_angles
