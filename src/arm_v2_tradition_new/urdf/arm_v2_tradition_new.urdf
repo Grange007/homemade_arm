@@ -97,8 +97,8 @@
     <axis
       xyz="0 0 1" />
     <limit
-      lower="-180"
-      upper="180"
+      lower="0"
+      upper="70"
       effort="0"
       velocity="0" />
   </joint>
@@ -155,8 +155,8 @@
     <axis
       xyz="0 0 1" />
     <limit
-      lower="-180"
-      upper="180"
+      lower="0"
+      upper="80"
       effort="0"
       velocity="0" />
   </joint>
@@ -212,6 +212,11 @@
       link="link3" />
     <axis
       xyz="0 0 1" />
+    <limit
+      lower="-150"
+      upper="0"
+      effort="0"
+      velocity="0" />
   </joint>
   <link
     name="link4">
@@ -264,7 +269,12 @@
     <child
       link="link4" />
     <axis
-      xyz="0 0 1" />
+      xyz="0 0 -1" />
+    <limit
+      lower="0"
+      upper="135"
+      effort="0"
+      velocity="0" />
   </joint>
   <link
     name="link5">
@@ -317,7 +327,12 @@
     <child
       link="link5" />
     <axis
-      xyz="0 0 1" />
+      xyz="0 0 -1" />
+    <limit
+      lower="0"
+      upper="135"
+      effort="0"
+      velocity="0" />
   </joint>
   <link
     name="link6">
