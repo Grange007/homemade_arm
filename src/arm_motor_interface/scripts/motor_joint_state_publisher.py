@@ -22,9 +22,9 @@ class MotorJointStatePublisher:
         self.joint_angles = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         self.joint_names = ['joint1', 'joint2', 'joint3', 'joint4', 'joint5', 'joint6']
         self.joint_state = JointState()
+        self.zero_positions = {}
         self.Unitree_init('/dev/ttyUSB0', 4000000)
         self.Cybergear_init('/dev/ttyUSB1', 921600)
-        rospy.sleep(1)
         self.timer = rospy.Timer(rospy.Duration(0.1), self.timer_callback)
 
     def Unitree_init(self, port, baudrate):
@@ -38,7 +38,7 @@ class MotorJointStatePublisher:
                 control_msg.position = 0.0
                 control_msg.velocity = 0.0
                 control_msg.Kp       = 0.0
-                control_msg.Kw       = 0.0
+                control_msg.Kv       = 0.0
                 feedback_msg = self.Unitree_controller.control(control_msg)
                 if feedback_msg != None:
                     self.zero_positions[i] = feedback_msg.position
@@ -56,7 +56,6 @@ class MotorJointStatePublisher:
                     self.zero_positions[i + 3] = feedback_msg.position
                     break
 
-
     def timer_callback(self, event):
         for i in range(0, 3):
             control_msg = Unitree.ControlMsg()
@@ -66,7 +65,7 @@ class MotorJointStatePublisher:
             control_msg.position = 0.0
             control_msg.velocity = 0.0
             control_msg.Kp       = 0.0
-            control_msg.Kw       = 0.0
+            control_msg.Kv       = 0.0
             feedback_msg = self.Unitree_controller.control(control_msg)
             if feedback_msg != None:
                 if feedback_msg.position - self.zero_positions[i] < 0:
@@ -81,7 +80,7 @@ class MotorJointStatePublisher:
             control_mode_msg.position = 0.0
             control_mode_msg.velocity = 0.0
             control_mode_msg.Kp       = 0.0
-            control_mode_msg.Ki       = 0.0
+            control_mode_msg.Kv       = 0.0
             feedback_msg = self.Cybergear_controller.controlMode(control_mode_msg)
             if feedback_msg != None:
                 if feedback_msg.position - self.zero_positions[i + 3] < 0:

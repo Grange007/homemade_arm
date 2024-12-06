@@ -4,7 +4,11 @@ import serial
 import struct
 
 import sys
-sys.path.append('./lib')
+import os
+cur_dir = os.path.dirname(os.path.abspath(__file__))
+lib_dir = os.path.join(cur_dir, 'lib')
+if lib_dir not in sys.path:
+    sys.path.append(lib_dir)
 import UnitreeMotorSDK
 
 logging.basicConfig(filename='Unitree.log', filemode='w', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -12,14 +16,14 @@ logging.basicConfig(filename='Unitree.log', filemode='w', level=logging.DEBUG, f
 
 class ControlMsg():
 
-    def __init__(self, id=0, status=0, torque=0.0, velocity=0.0, position=0.0, Kp=0.0, Kw=0.0):
+    def __init__(self, id=0, status=0, torque=0.0, velocity=0.0, position=0.0, Kp=0.0, Kv=0.0):
         self.id       = id
         self.status   = status
         self.torque   = min(max(torque, -127.99), 127.99)
         self.velocity = min(max(velocity, -804.0), 804.0)
         self.position = min(max(position, -411774), 411774)
         self.Kp       = min(max(Kp, 0.0), 25.599)
-        self.Kw       = min(max(Kw, 0.0), 25.599)
+        self.Kv       = min(max(Kv, 0.0), 25.599)
 
     def encode(self):
         msg = UnitreeMotorSDK.MotorCmd()
@@ -29,7 +33,7 @@ class ControlMsg():
         msg.W    = self.velocity
         msg.Pos  = self.position
         msg.K_P  = self.Kp
-        msg.K_W  = self.Kw
+        msg.K_W  = self.Kv
         return msg
 
 

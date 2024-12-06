@@ -2,7 +2,9 @@ build/
 devel/
 __pycache__/
 
-UnitreeMotorSDK.cpython-38-x86_64-linux-gnu.so
 
 *.log
 .vscode
+
+*.so
+!libUnitreeMotorSDK_M80106_Linux64.so

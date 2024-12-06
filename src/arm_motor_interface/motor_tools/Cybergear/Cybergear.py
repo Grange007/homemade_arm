@@ -30,13 +30,13 @@ RUN_MODES = {
 
 class ControlModeMsg():
 
-    def __init__(self, can_id=1, torque=0.0, position=0.0, velocity=0.0, Kp=0.0, Kd=0.0):
+    def __init__(self, can_id=1, torque=0.0, position=0.0, velocity=0.0, Kp=0.0, Kv=0.0):
         self.can_id   = can_id
         self.torque   = min(max(torque, -12.0), 12.0)
         self.position = min(max(position, -4*math.pi), 4*math.pi)
         self.velocity = min(max(velocity, -30.0), 30.0)
         self.Kp       = min(max(Kp, 0.0), 500.0)
-        self.Kd       = min(max(Kd, 0.0), 5.0)
+        self.Kv       = min(max(Kv, 0.0), 5.0)
 
     def encode(self):
         type     = 0x01
@@ -46,10 +46,10 @@ class ControlModeMsg():
         position = int((self.position + 4*math.pi)/(8*math.pi) * 0xffff)
         velocity = int((self.velocity + 30.0)/60 * 0xffff)
         Kp       = int(self.Kp / 500 * 0xffff)
-        Kd       = int(self.Kd / 5 * 0xffff)
+        Kv       = int(self.Kv / 5 * 0xffff)
 
         data = [type << 3 | torque >> 13, torque >> 5 & 0xff, torque << 3 & 0xff | can_id >> 8, can_id & 0xff,
-                length, position >> 8, position & 0xff, velocity >> 8, velocity & 0xff, Kp >> 8, Kp & 0xff, Kd >> 8, Kd & 0xff]
+                length, position >> 8, position & 0xff, velocity >> 8, velocity & 0xff, Kp >> 8, Kp & 0xff, Kv >> 8, Kv & 0xff]
         msg = "41 54 " + ' '.join(f'{byte:02x}' for byte in data) + " 0d 0a"
         logging.info("controlModeMsg: " + msg)
         return msg
