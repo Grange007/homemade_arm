@@ -25,11 +25,6 @@
             </geometry>
         </collision>
     </link>
-    <link name="world"/>
-	<joint name="fixed" type="fixed">
- 		 <parent link="world"/>
-		 <child link="base_link"/>
-	</joint>
     <link name="link1">
         <inertial>
             <origin xyz="0.00327234377134179 0.0044317081845386 0.0520857987916406" rpy="0 0 0" />
@@ -86,7 +81,7 @@
         <parent link="link1" />
         <child link="link2" />
         <axis xyz="0 0 1" />
-        <limit lower="-180" upper="180" effort="0" velocity="0" />
+        <limit lower="0" upper="80" effort="0" velocity="0" />
     </joint>
     <link name="link3">
         <inertial>
@@ -115,6 +110,7 @@
         <parent link="link2" />
         <child link="link3" />
         <axis xyz="0 0 1" />
+        <limit lower="-150" upper="0" effort="0" velocity="0" />
     </joint>
     <link name="link4">
         <inertial>
@@ -142,7 +138,8 @@
         <origin xyz="0.0046348 0.011891 0.165" rpy="1.9429 1.5708 0" />
         <parent link="link3" />
         <child link="link4" />
-        <axis xyz="0 0 1" />
+        <axis xyz="0 0 -1" />
+        <limit lower="0" upper="135" effort="0" velocity="0" />
     </joint>
     <link name="link5">
         <inertial>
@@ -170,7 +167,8 @@
         <origin xyz="0.0094747 0.17975 -0.0175" rpy="3.1416 0 -3.1416" />
         <parent link="link4" />
         <child link="link5" />
-        <axis xyz="0 0 1" />
+        <axis xyz="0 0 -1" />
+        <limit lower="0" upper="135" effort="0" velocity="0" />
     </joint>
     <link name="link6">
         <inertial>

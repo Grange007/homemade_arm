@@ -1,0 +1,11 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: arm_v2_tradition_new
+    relative_path: urdf/arm_v2_tradition_new.urdf
+    xacro_args: ""
+  SRDF:
+    relative_path: config/arm_v2_tradition_new.srdf
+  CONFIG:
+    author_name: 111
+    author_email: 111@qq.com
+    generated_timestamp: 1733461966
