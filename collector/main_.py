@@ -4,8 +4,9 @@ import json
 import argparse
 from pynput import keyboard
 from easydict import EasyDict as edict
-from easyrobot.encoder.angle import AngleEncoder
-
+from easyrobot.encoder.Unitree_encoder import UnitreeEncoder
+from easyrobot.encoder.Cybergear_encoder import CybergearEncoder
+from easyrobot.encoder.End_effector import EndEffectorEncoder
 
 if __name__ == '__main__':
     os.system("kill -9 `ps -ef | grep collector | grep -v grep | awk '{print $2}'`")
@@ -18,7 +19,7 @@ if __name__ == '__main__':
         default = 'test', 
         help = 'task name', 
         type = str,
-        choices = ['grasp', 'test']
+        choices = ['servo', 'motor', 'test']
     )
     args = parser.parse_args()
 
@@ -27,20 +28,19 @@ if __name__ == '__main__':
     if not os.path.exists(run_path):
         raise AttributeError('Please provide the configuration file {}.'.format(run_path))
     with open(run_path, 'r') as f:
+        print(run_path)
         cfgs = edict(json.load(f))
-    
+
     tid = int(input('Task ID: '))
     sid = int(input('Scene ID: '))
     uid = int(input('User ID: '))
-    
-    # tid = 0
-    # sid = 0
-    # uid = 0
  
-    # encoder_mi = AngleEncoder(**cfgs.encoder_MI)
-    # encoder_mi.streaming()
-    # encoder_unitree = AngleEncoder(**cfgs.encoder_Unitree)
-    # encoder_unitree.streaming()
+    Unitree_encoder = UnitreeEncoder(**cfgs.Unitree_encoder)
+    Unitree_encoder.streaming()
+    Cybergear_encoder = CybergearEncoder(**cfgs.Cybergear_encoder)
+    Cybergear_encoder.streaming()
+    servo_encoder = EndEffectorEncoder(**cfgs.servo_encoder)
+    servo_encoder.streaming()
     has_start = False
     has_stop = False
     print("start")
@@ -53,8 +53,9 @@ if __name__ == '__main__':
                 if not has_start:
                     pass
                 else:
-                    encoder_right.stop_streaming()
-                    encoder_left.stop_streaming()
+                    Unitree_encoder.stop_streaming()
+                    Cybergear_encoder.stop_streaming()
+                    servo_encoder.stop_streaming()
                     has_stop = True
             if key.char == 's':
                 if not has_start:

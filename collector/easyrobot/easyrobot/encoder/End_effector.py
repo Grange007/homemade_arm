@@ -84,7 +84,7 @@ class EndEffectorEncoder(EncoderBase):
                 count += 1
 
 # 读取完成后，results 列表中包含了 self.ids_num 个数据块
-        angles = {}
+        angles = []
         for data in results:
             try:
                 parts = data.strip().split('P')
@@ -93,13 +93,13 @@ class EndEffectorEncoder(EncoderBase):
                 id = int(id_str)
                 angle = int(angle_str)
                 angle = (angle-500)/2000*270
-                angles[id] = angle
+                angles.append(angle)
             except (IndexError, ValueError) as e:
                 if not ignore_error:
                     raise RuntimeError(f"Error parsing data: {data}") from e
         
-        if not ignore_error and count != len(ids):
-            raise RuntimeError('Failure to receive all encoders, errors occurred in ID {}.'.format(remains))
+        # if not ignore_error and count != len(ids):
+        #     raise RuntimeError('Failure to receive all encoders, errors occurred in ID {}.'.format(remains))
         self.last_angle = angles
         return angles
     

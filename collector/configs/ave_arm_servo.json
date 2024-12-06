@@ -1,0 +1,23 @@
+{
+    "name": "Collector",
+    "servo_encoder": {
+        "ids": [1, 2],
+        "port": "/dev/ttyUSB0",
+        "baudrate": 115200,
+        "logger_name": "Servo-Encoder",
+        "shm_name": "servo_encoder",
+        "streaming_freq": 20
+    },
+
+
+    "data_path": "/home/grange/Program/act_arm/collector/data",
+    "shm_data": {
+        "servo_encoder": {
+            "shape": [2],
+            "type": "float32"
+        }
+    },
+
+    "cameras": []
+
+}

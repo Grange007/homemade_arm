@@ -1,0 +1,81 @@
+<mujoco model="arm_v2_backpack2">
+    <!-- 定义世界 -->
+    <compiler angle="radian" eulerseq = "XYZ"/>
+    <default>
+        <joint limited="true" />
+        <geom type="mesh" condim="3" />
+    </default>
+    
+    <worldbody>
+
+        <light diffuse="0.3 0.3 0.3" pos="1 0 3" dir="-1 0 -3" />
+        <geom type="plane" size="0 0 0.1" material="grid"/>
+        <camera name="f_dabai" pos="0.2079 -0.01983 0.863" euler="0 -1.57 -1.57" fovy="55" />
+        <body name="Table" pos="0.0 0.0 0.8">
+            <geom size="0.6 0.5 0.015" type="box" rgba="0.75294 0.75294 0.75294 1" friction="1 0.1 0.1" solimp="0.95 0.95 0.01" solref="0.01 1" condim="4" margin="0.0" />
+            <!-- <site name="target0" size="0.02 0.0001" rgba="0 1 0 1" type="cylinder" pos="-0.1 -0.25 0.015" /> -->
+            <geom size="0.02 0.4" pos="-0.4 -0.4 -0.4" type="cylinder" rgba="0.8 0.2 0.1 1" />
+            <geom size="0.02 0.4" pos="-0.4 0.4 -0.4" type="cylinder" rgba="0.8 0.2 0.1 1" />
+            <geom size="0.02 0.4" pos="0.4 -0.4 -0.4" type="cylinder" rgba="0.8 0.2 0.1 1" />
+            <geom size="0.02 0.4" pos="0.4 0.4 -0.4" type="cylinder" rgba="0.8 0.2 0.1 1" />
+        </body>
+
+        <body name="base_link" pos="-0.0655618 -0.0103795 0.8">
+            <inertial pos="-0.0655618 -0.0103795 0.176875" mass="1.477" diaginertia="0.00908 0.00468 0.00808" />
+            <geom type="mesh" mesh="base_link_mesh" rgba="0.75 0.75 0.75 1" />
+            <joint name="joint0" type="hinge" range="-10 0"/>
+            <body name="link1" pos="-0.06633 -0.0815 0.16917" euler="1.5707963267949 1.57078993284224 0">
+                <inertial pos="-0.00997 0.01000 0.04598" mass="0.450" diaginertia="0.0006975 0.0006973 0.0003662" />
+                <geom type="mesh" mesh="link1_mesh" rgba="1 1 1 1" />
+                <joint name="joint1" type="hinge" axis="0 0 1" range="-360 360" />
+
+                <body name="link2" pos="0.01983 -0.01983 0.05999" euler="1.5707963267949 0 0.785398163397435">
+                    <inertial pos="0.12691 0.11232 -0.02324" mass="0.413" diaginertia="0.0008515 0.001008 0.001829" />
+                    <geom type="mesh" mesh="link2_mesh"  rgba="1 1 1 1" />
+                    <joint name="joint2" type="hinge"  axis="0 0 1" range="-360 360" />
+
+                    <body name="link3" pos="0.14974 0.1326 -0.0585" euler="-3.1416 0 3.1416">
+                        <inertial pos="0.00299 -0.00637 0.1073" mass="0.527" diaginertia="0.0007823 0.0008373 0.0002803" />
+                        <geom type="mesh" mesh="link3_mesh" rgba="1 1 1 1" />
+                        <joint name="joint3" type="hinge" axis="0 0 1" range="-360 360" />
+
+                        <body name="link4" pos="0.00559 -0.0115 0.165" euler="-1.1194 -1.5708 0.001049">
+                            <joint name="joint4" type="hinge" axis="0 0 1" range="-360 360" />
+                            <inertial pos="0.04561 0.14361 0.02095" mass="0.262" diaginertia="0.0006883 0.0001617 0.0008355" />
+                            <geom type="mesh" mesh="link4_mesh" rgba="1 1 1 1" />
+
+                            <body name="link5" pos="0.05477 0.17147 -0.0175" euler="3.1416 0 -3.1416">
+                                <joint name="joint5" type="hinge" axis="0 0 1" range="-360 360" />
+                                <inertial pos="-0.10005 0.01219 -0.11721" mass="1.414" diaginertia="0.001093 0.0005350 0.0009338" />
+                                <geom type="mesh" mesh="link5_mesh" rgba="0.75 0.75 0.75 1" />
+
+                                <body name="link6" pos="-0.15396 0.00764 -0.00472" euler="-1.5708 -0.45013 1.4592">
+                                    <joint name="joint6" type="hinge" axis="0 0 1" range="-360 360" />
+                                    <inertial pos="-0.00141 -0.00494 0.01818" mass="0.041" diaginertia="6.835E-06 7.719E-06 1.093E-05" />
+                                    <geom type="mesh" mesh="link6_mesh" rgba="1 1 1 1" />
+                                    <body name="link7" pos="-0.00086 -0.0304 0.0195" euler="1.5708 1.4592 0.45013">
+                                        <inertial pos="-0.04605 0.01855 0.05754" mass="0.173" diaginertia="0.0002125 0.0002067 6.503E-05" />
+                                        <geom type="mesh" mesh="link7_mesh" rgba="1 1 1 1" />
+                                    </body>
+                                </body>
+                            </body>
+                        </body>
+                    </body>
+                </body>
+            </body>
+        </body>
+    </worldbody>
+
+    <asset>
+        <mesh name="base_link_mesh" file="/home/grange/Program/act_arm/arm_v2_backpack2/meshes/base_link.STL"/>
+        <mesh name="link1_mesh" file="/home/grange/Program/act_arm/arm_v2_backpack2/meshes/link1.STL"/>
+        <mesh name="link2_mesh" file="/home/grange/Program/act_arm/arm_v2_backpack2/meshes/link2.STL"/>
+        <mesh name="link3_mesh" file="/home/grange/Program/act_arm/arm_v2_backpack2/meshes/link3.STL"/>
+        <mesh name="link4_mesh" file="/home/grange/Program/act_arm/arm_v2_backpack2/meshes/link4.STL"/>
+        <mesh name="link5_mesh" file="/home/grange/Program/act_arm/arm_v2_backpack2/meshes/link5.STL"/>
+        <mesh name="link6_mesh" file="/home/grange/Program/act_arm/arm_v2_backpack2/meshes/link6.STL"/>
+        <mesh name="link7_mesh" file="/home/grange/Program/act_arm/arm_v2_backpack2/meshes/link7.STL"/>
+        <texture name="grid" type="2d" builtin="checker" width="512" height="512" rgb1=".1 .2 .3" rgb2=".2 .3 .4" />
+        <material name="grid" texture="grid" texrepeat="1 1" texuniform="true" reflectance=".2" />
+    </asset>
+</mujoco>
